@@ -1,3 +1,4 @@
+from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -43,7 +44,13 @@ def acessar_site():
     # # Configuração do WebDriver
     # navegador = webdriver.Chrome(options=chrome_options)
     try:
-        navegador = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+        chrome_driver_path = ChromeDriverManager().install().replace("THIRD_PARTY_NOTICES.chromedriver", "chromedriver.exe")
+        navegador = webdriver.Chrome(service=Service(chrome_driver_path))
+        # chrome_install = ChromeDriverManager().install()
+        #
+        # folder = os.path.dirname(chrome_install)
+        # chromedriver_path = os.path.join(folder, "chromedriver.exe")
+        # navegador = webdriver.Chrome(service=Service(chromedriver_path))
     except Exception as e:
         print("Erro ao usar ChromeDriverManager:", e)
         # Caminho para o executável do ChromeDriver baixado manualmente
@@ -84,55 +91,55 @@ def acessar_site():
     )
     input_field.click()
 
-    texto = None
-    while texto is None:
-        imagem = gera_imagem_captcha_login(navegador)
-        texto = resolver_captcha(imagem)
-        if len(texto) >= 6:
-            navegador.find_element(By.NAME, 'TextCaptcha').send_keys(texto)
-            if is_visible(navegador):
-                navegador.find_element(By.ID, 'txtSenha').send_keys(senha)
-                navegador.find_element(By.NAME, 'TextCaptcha').clear()
-                navegador.find_element(By.NAME, 'TextCaptcha').click()
-                texto = None
-        else:
-            WebDriverWait(navegador, 3).until(ec.presence_of_element_located(
-                (By.ID, 'lnkNewCaptcha'))).click()
-            texto = None
+    # texto = None
+    # while texto is None:
+    #     imagem = gera_imagem_captcha_login(navegador)
+    #     texto = resolver_captcha(imagem)
+    #     if len(texto) >= 6:
+    #         navegador.find_element(By.NAME, 'TextCaptcha').send_keys(texto)
+    #         if is_visible(navegador):
+    #             navegador.find_element(By.ID, 'txtSenha').send_keys(senha)
+    #             navegador.find_element(By.NAME, 'TextCaptcha').clear()
+    #             navegador.find_element(By.NAME, 'TextCaptcha').click()
+    #             texto = None
+    #     else:
+    #         WebDriverWait(navegador, 3).until(ec.presence_of_element_located(
+    #             (By.ID, 'lnkNewCaptcha'))).click()
+    #         texto = None
 
     adicionar_mensagem(f"Aguardando usuário digitar o captcha...")
     janela.update()  # Atualiza a janela para exibir a mensagem
 
-    # while True:
-    #     try:
-    #         input_field = WebDriverWait(navegador, timeout).until(
-    #             ec.element_to_be_clickable((By.ID, 'TextCaptcha')))
-    #         input_field.click()
-    #         if check_input(input_field):
-    #             # Encontrar e clicar no botão de login
-    #             # navegador.find_element(By.ID, 'btnEntrar').click()
-    #             WebDriverWait(navegador, timeout).until(
-    #                 ec.element_to_be_clickable((By.ID, 'btnEntrar'))
-    #             ).click()
-    #             if is_visible(navegador):
-    #                 adicionar_mensagem(f"captcha digitado é inválido, digite novamente!")
-    #                 janela.update()  # Atualiza a janela para exibir a mensagem
-    #                 # Manter o foco no campo de entrada se o texto for inválido
-    #                 WebDriverWait(navegador, timeout).until(
-    #                     ec.element_to_be_clickable((By.ID, 'txtSenha'))
-    #                 ).send_keys(senha)
-    #
-    #                 WebDriverWait(navegador, timeout).until(
-    #                     ec.element_to_be_clickable((By.ID, 'TextCaptcha'))).clear()
-    #                 WebDriverWait(navegador, timeout).until(
-    #                     ec.element_to_be_clickable((By.ID, 'TextCaptcha'))).click()
-    #             else:
-    #                 adicionar_mensagem(f"Login OK! Abrindo a página inicial...")
-    #                 janela.update()  # Atualiza a janela para exibir a mensagem
-    #                 break
-    #     except StaleElementReferenceException:
-    #         # Ignorar e continuar o loop se o elemento estiver obsoleto
-    #         pass
+    while True:
+        try:
+            input_field = WebDriverWait(navegador, timeout).until(
+                ec.element_to_be_clickable((By.ID, 'TextCaptcha')))
+            input_field.click()
+            if check_input(input_field):
+                # Encontrar e clicar no botão de login
+                # navegador.find_element(By.ID, 'btnEntrar').click()
+                WebDriverWait(navegador, timeout).until(
+                    ec.element_to_be_clickable((By.ID, 'btnEntrar'))
+                ).click()
+                if is_visible(navegador):
+                    adicionar_mensagem(f"captcha digitado é inválido, digite novamente!")
+                    janela.update()  # Atualiza a janela para exibir a mensagem
+                    # Manter o foco no campo de entrada se o texto for inválido
+                    WebDriverWait(navegador, timeout).until(
+                        ec.element_to_be_clickable((By.ID, 'txtSenha'))
+                    ).send_keys(senha)
+
+                    WebDriverWait(navegador, timeout).until(
+                        ec.element_to_be_clickable((By.ID, 'TextCaptcha'))).clear()
+                    WebDriverWait(navegador, timeout).until(
+                        ec.element_to_be_clickable((By.ID, 'TextCaptcha'))).click()
+                else:
+                    adicionar_mensagem(f"Login OK! Abrindo a página inicial...")
+                    janela.update()  # Atualiza a janela para exibir a mensagem
+                    break
+        except StaleElementReferenceException:
+            # Ignorar e continuar o loop se o elemento estiver obsoleto
+            pass
     nova_inscricao(navegador)
 
 
@@ -146,6 +153,7 @@ def nova_inscricao(navegador_param):
 
 
 def pesquisar_vaga(navegador_param):
+    is_mensagem = False
     current_time = datetime.now().time()
     if current_time < datetime.strptime("06:00:00", "%H:%M:%S").time():
         adicionar_mensagem(f"Aguardando o horário para iniciar a marcação do RAS...")
@@ -241,61 +249,71 @@ def pesquisar_vaga(navegador_param):
             try:
                 # print(navegador.page_source)
                 # Usar XPath para encontrar o campo de entrada
+
+                # Garante que o elemento seja visível e clicável
                 input_field = WebDriverWait(navegador_param, timeout).until(
+                    ec.visibility_of_element_located((By.XPATH, '//*[@id="TextCaptcha"]'))
+                )
+
+                WebDriverWait(navegador_param, timeout).until(
                     ec.element_to_be_clickable((By.XPATH, '//*[@id="TextCaptcha"]'))
                 )
                 input_field.clear()
-                input_field.click()
+                #input_field.click()
+                # Executa o clique via JavaScript e coloca o foco no campo
+                navegador_param.execute_script("arguments[0].click(); arguments[0].focus();", input_field)
 
                 # Loop para monitorar continuamente a entrada e a hora
                 tentativa = 1
                 while True:
                     try:
-                        current_time = datetime.now().time()
-                        if current_time < datetime.strptime("07:00:00", "%H:%M:%S").time():
-                            adicionar_mensagem(f"Aguardando o horário para iniciar a marcação do Proeis...")
-                            janela.update()  # Atualiza a janela para exibir a mensagem
-                        imagem = gera_imagem_captcha_vaga(navegador_param)
-                        texto_captcha = resolver_captcha(imagem)
-                        navegador_param.find_element(By.ID, 'TextCaptcha').send_keys(texto_captcha)
-                        WebDriverWait(navegador_param, timeout).until(
-                                                        ec.element_to_be_clickable((By.ID, 'btnConsultar'))).click()
-                        while verifica_local_visivel(navegador_param):
-                            break
-                        alert = is_alert(navegador_param)
-                        if alert == 0:
-                            is_ok = True
-                            break
-                        else:
-                            adicionar_mensagem(f"captcha é inválido, irei tentar novamente!")
-                            janela.update()  # Atualiza a janela para exibir a mensagem
-
-
-                        # input_field = WebDriverWait(navegador_param, timeout).until(
-                        #     ec.element_to_be_clickable((By.XPATH, '//*[@id="TextCaptcha"]'))
-                        # )
                         # current_time = datetime.now().time()
                         # if current_time < datetime.strptime("07:00:00", "%H:%M:%S").time():
                         #     adicionar_mensagem(f"Aguardando o horário para iniciar a marcação do Proeis...")
                         #     janela.update()  # Atualiza a janela para exibir a mensagem
-                        # if check_input_and_time(input_field, hora_limite):
-                        #     # Encontrar e clicar no botão de login
-                        #     WebDriverWait(navegador_param, timeout).until(
-                        #         ec.element_to_be_clickable((By.ID, 'btnConsultar'))).click()
-                        #     while verifica_local_visivel(navegador_param):
-                        #         break
-                        #     alert = is_alert(navegador_param)
-                        #     if alert == 0:
-                        #         is_ok = True
-                        #         break
-                        #     else:
-                        #         adicionar_mensagem(f"captcha digitado é inválido, digite novamente!")
-                        #         janela.update()  # Atualiza a janela para exibir a mensagem
+                        # imagem = gera_imagem_captcha_vaga(navegador_param)
+                        # texto_captcha = resolver_captcha(imagem)
+                        # navegador_param.find_element(By.ID, 'TextCaptcha').send_keys(texto_captcha)
+                        # WebDriverWait(navegador_param, timeout).until(
+                        #                                 ec.element_to_be_clickable((By.ID, 'btnConsultar'))).click()
+                        # while verifica_local_visivel(navegador_param):
+                        #     break
+                        # alert = is_alert(navegador_param)
+                        # if alert == 0:
+                        #     is_ok = True
+                        #     break
+                        # else:
+                        #     adicionar_mensagem(f"captcha é inválido, irei tentar novamente!")
+                        #     janela.update()  # Atualiza a janela para exibir a mensagem
+
+                        input_field = WebDriverWait(navegador_param, timeout).until(
+                            ec.element_to_be_clickable((By.XPATH, '//*[@id="TextCaptcha"]'))
+                        )
+                        current_time = datetime.now().time()
+                        if current_time < datetime.strptime("07:00:00", "%H:%M:%S").time():
+                            if not is_mensagem:
+                                is_mensagem = True
+                                adicionar_mensagem(f"Aguardando o horário para iniciar a marcação do Proeis...")
+                                janela.update()  # Atualiza a janela para exibir a mensagem
+                        if check_input_and_time(input_field, hora_limite):
+                            # Encontrar e clicar no botão de login
+                            WebDriverWait(navegador_param, timeout).until(
+                                ec.element_to_be_clickable((By.ID, 'btnConsultar'))).click()
+                            while verifica_local_visivel(navegador_param):
+                                break
+                            alert = is_alert(navegador_param)
+                            if alert == 0:
+                                is_ok = True
+                                break
+                            else:
+                                adicionar_mensagem(f"captcha digitado é inválido, digite novamente!")
+                                janela.update()  # Atualiza a janela para exibir a mensagem
                     except StaleElementReferenceException:
                         print(f"Erro ao clicar no elemento para consultar as vagas: {tentativa}")
                         tentativa += 1
                         # Esperar por um curto período para evitar uso excessivo de CPU
-            except Exception:
+            except Exception as e:
+                print("Erro:", e)
                 print(f"Erro ao clicar no elemento para digitar o captcha. Tentavia {tentativa}")
                 tentativa += 1
                 if tentativa > 5:  # Número máximo de tentativas
@@ -339,9 +357,15 @@ def pesquisar_vaga(navegador_param):
                 if elementos_evento.is_displayed() and elementos_evento.is_enabled():
                     navegador_param.execute_script("arguments[0].click();", elementos_evento)
                     is_alert(navegador_param, 20)
-                    adicionar_mensagem(f"Setor {informacao['setor_servico']} no dia {informacao['data_servico'][8:10]}/{informacao['data_servico'][5:7]}/{informacao['data_servico'][0:4]} às {informacao['hora_servico']} marcado com sucesso!")
+                    adicionar_mensagem(
+                        f"Setor {informacao['setor_servico']} no dia {informacao['data_servico'][8:10]}/{informacao['data_servico'][5:7]}/{informacao['data_servico'][0:4]} às {informacao['hora_servico']} marcado com sucesso!")
                     janela.update()  # Atualiza a janela para exibir a mensagem
                     break
+                else:
+                    adicionar_mensagem(
+                        f"Setor {informacao['setor_servico']} no dia {informacao['data_servico'][8:10]}/{informacao['data_servico'][5:7]}/{informacao['data_servico'][0:4]} às {informacao['hora_servico']} não encontrado!")
+                    janela.update()  # Atualiza a janela para exibir a mensagem
+                    continue
             except TimeoutException:
                 print(f"Erro ao clicar no elemento de marcação da vaga: {tentativa}")
                 tentativa += 1
@@ -893,7 +917,7 @@ def abrir_janela():
     for i in range(7):
         convenio_vars.append(IntVar())
         convenio_check = Checkbutton(janela, text='Convênio:', onvalue=1, offvalue=0, variable=convenio_vars[i])
-        convenio_check.grid(column=column, row=row, padx=5, pady=5)
+        convenio_check.grid(column=column, row=row, padx=(5, 2), pady=5, sticky="w")
         checkbuttons_convenio.append(convenio_check)
         convenio_check.config(command=lambda index=i: on_checkbox_click(index, True))
         column += 1
@@ -903,7 +927,7 @@ def abrir_janela():
         w_convenio = OptionMenu(janela, variable_convenio[i], *OPTIONS_CONVENIO,
                                 command=lambda value, idx=i: update_locais_convenio(value, idx))
         w_convenio.config(state='disabled')
-        w_convenio.grid(column=column, row=row, padx=5, pady=5)
+        w_convenio.grid(column=column, row=row, padx=(5, 2), pady=5, sticky="w")
         select_convenio.append(w_convenio)
 
         column += 1
@@ -977,11 +1001,11 @@ def abrir_janela():
     global text_area
     # Área de texto para exibir mensagens
     text_area = Text(janela, height=10, width=100, wrap=tk.WORD)
-    text_area.grid(row=row, column=0, padx=10, pady=10, sticky="nsew", columnspan=12)
+    text_area.grid(row=row, column=0, padx=10, pady=10, sticky="nsew", columnspan=11)
 
     # Barra de rolagem para a área de texto
     scrollbar = Scrollbar(janela, command=text_area.yview)
-    scrollbar.grid(row=row, column=12, sticky='nsew')
+    scrollbar.grid(row=row, column=11, sticky='ns')
     text_area.config(yscrollcommand=scrollbar.set)
 
     # Impede que o usuário edite a área de texto diretamente

@@ -367,6 +367,7 @@ OPTIONS_VAGASXLOCAIS_CPA = {
                         'MÓDULO TREVO LATINO MELO',
                         'VTR DE APOIO AO MODULO JACAREPIA',
                         'SAQUAREMA MAIS SEGURA III',
+                        'MÓDULO TREVO VILATUR',
                     ],
     "MUNICIPIO DE ARRAIAL DO CABO": [
                         'Selecione uma vaga',
