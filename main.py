@@ -157,6 +157,7 @@ def nova_inscricao(navegador_param):
     pesquisar_vaga(navegador_param)
     """ processar_informacoes(navegador_param) """
 
+
 def processar_informacoes(navegador_param):
     global tentativa
     iterator = iter(informacoes_array)
@@ -195,6 +196,7 @@ def processar_informacoes(navegador_param):
             break
 
         selecionar_vaga(navegador_param, informacao, next_item)
+
 
 def pesquisar_vaga(navegador_param):
     is_mensagem = False
@@ -278,7 +280,7 @@ def pesquisar_vaga(navegador_param):
                         informacao["local_servico"]
                     )  # CARREGA PELA DESCRIÇÃO
                 except StaleElementReferenceException:
-                    select_convenio = None                    
+                    select_convenio = None
                     tentativa = tentativa + 1
 
         # SELECIONA A VAGA PELO CPA
@@ -296,7 +298,7 @@ def pesquisar_vaga(navegador_param):
                         informacao["local_servico"]
                     )  # CARREGA PELA DESCRIÇÃO
                 except StaleElementReferenceException:
-                    select_cpa = None                    
+                    select_cpa = None
                     tentativa = tentativa + 1
 
         tentativa = 1
@@ -461,7 +463,6 @@ def pesquisar_vaga(navegador_param):
     navegador_param.quit()
 
 
-
 def selecionar_data_evento(navegador_param, data_servico, timeout):
     select_data_evento = None
     tentativa = 1
@@ -617,7 +618,6 @@ def selecionar_vaga(navegador_param, informacao, next_item):
                 )
                 janela.update()  # Atualiza a janela para exibir a mensagem
             break
-
 
 
 # Função para verificar o comprimento da entrada
@@ -907,6 +907,11 @@ def abrir_janela():
                 tipo_login = "ID"
 
         usuario = entry_usuario.get()
+        usuarios_validos = ["12220864766", "51040425", "11325438782", "50952790"]
+        if usuario not in usuarios_validos:
+            show_alert("Erro", "Usuário não habilitado. Verifique!")
+            return False
+
         senha = entry_senha.get()
         if not usuario or not senha:
             show_alert("Erro", "Usuário e senha não podem ser vazios.")
