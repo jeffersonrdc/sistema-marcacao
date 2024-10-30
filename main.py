@@ -7,8 +7,13 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 import base64
 import re
-from selenium.common.exceptions import ElementClickInterceptedException, TimeoutException, NoSuchElementException, \
-    InvalidSelectorException, WebDriverException
+from selenium.common.exceptions import (
+    ElementClickInterceptedException,
+    TimeoutException,
+    NoSuchElementException,
+    InvalidSelectorException,
+    WebDriverException,
+)
 from selenium.common.exceptions import StaleElementReferenceException
 from identificadores import *
 from selenium.webdriver.chrome.service import Service
@@ -34,6 +39,7 @@ import os
 # prontos para interação.
 
 timeout = 60
+tentativa = 0
 
 
 def acessar_site():
@@ -43,19 +49,12 @@ def acessar_site():
     #
     # # Configuração do WebDriver
     # navegador = webdriver.Chrome(options=chrome_options)
-    try:
-        chrome_driver_path = ChromeDriverManager().install().replace("THIRD_PARTY_NOTICES.chromedriver", "chromedriver.exe")
-        navegador = webdriver.Chrome(service=Service(chrome_driver_path))
-        # chrome_install = ChromeDriverManager().install()
-        #
-        # folder = os.path.dirname(chrome_install)
-        # chromedriver_path = os.path.join(folder, "chromedriver.exe")
-        # navegador = webdriver.Chrome(service=Service(chromedriver_path))
-    except Exception as e:
-        print("Erro ao usar ChromeDriverManager:", e)
-        # Caminho para o executável do ChromeDriver baixado manualmente
-        chrome_driver_path = r"C:\Program Files\chromedriver\chromedriver.exe"
-        navegador = webdriver.Chrome(service=Service(chrome_driver_path))
+    chrome_driver_path = (
+        ChromeDriverManager()
+        .install()
+        .replace("THIRD_PARTY_NOTICES.chromedriver", "chromedriver.exe")
+    )
+    navegador = webdriver.Chrome(service=Service(chrome_driver_path))
     navegador.maximize_window()
 
     # Conectar ao DevTools e simular a rede 3G
@@ -71,23 +70,25 @@ def acessar_site():
     link = "http://www.proeis.rj.gov.br/"
     navegador.get(link)
 
-    select = Select(WebDriverWait(navegador, timeout).until(
-        ec.element_to_be_clickable((By.ID, 'ddlTipoAcesso'))
-    ))
+    select = Select(
+        WebDriverWait(navegador, timeout).until(
+            ec.element_to_be_clickable((By.ID, "ddlTipoAcesso"))
+        )
+    )
 
     select.select_by_value(tipo_login)
 
     WebDriverWait(navegador, timeout).until(
-        ec.element_to_be_clickable((By.ID, 'txtLogin'))
+        ec.element_to_be_clickable((By.ID, "txtLogin"))
     ).send_keys(usuario)
     WebDriverWait(navegador, timeout).until(
-        ec.element_to_be_clickable((By.ID, 'txtSenha'))
+        ec.element_to_be_clickable((By.ID, "txtSenha"))
     ).send_keys(senha)
     # print(navegador.page_source)
 
     # Encontrar o campo de entrada
     input_field = WebDriverWait(navegador, timeout).until(
-        ec.element_to_be_clickable((By.ID, 'TextCaptcha'))
+        ec.element_to_be_clickable((By.ID, "TextCaptcha"))
     )
     input_field.click()
 
@@ -113,26 +114,30 @@ def acessar_site():
     while True:
         try:
             input_field = WebDriverWait(navegador, timeout).until(
-                ec.element_to_be_clickable((By.ID, 'TextCaptcha')))
+                ec.element_to_be_clickable((By.ID, "TextCaptcha"))
+            )
             input_field.click()
             if check_input(input_field):
                 # Encontrar e clicar no botão de login
-                # navegador.find_element(By.ID, 'btnEntrar').click()
                 WebDriverWait(navegador, timeout).until(
-                    ec.element_to_be_clickable((By.ID, 'btnEntrar'))
+                    ec.element_to_be_clickable((By.ID, "btnEntrar"))
                 ).click()
                 if is_visible(navegador):
-                    adicionar_mensagem(f"captcha digitado é inválido, digite novamente!")
+                    adicionar_mensagem(
+                        f"captcha digitado é inválido, digite novamente!"
+                    )
                     janela.update()  # Atualiza a janela para exibir a mensagem
                     # Manter o foco no campo de entrada se o texto for inválido
                     WebDriverWait(navegador, timeout).until(
-                        ec.element_to_be_clickable((By.ID, 'txtSenha'))
+                        ec.element_to_be_clickable((By.ID, "txtSenha"))
                     ).send_keys(senha)
 
                     WebDriverWait(navegador, timeout).until(
-                        ec.element_to_be_clickable((By.ID, 'TextCaptcha'))).clear()
+                        ec.element_to_be_clickable((By.ID, "TextCaptcha"))
+                    ).clear()
                     WebDriverWait(navegador, timeout).until(
-                        ec.element_to_be_clickable((By.ID, 'TextCaptcha'))).click()
+                        ec.element_to_be_clickable((By.ID, "TextCaptcha"))
+                    ).click()
                 else:
                     adicionar_mensagem(f"Login OK! Abrindo a página inicial...")
                     janela.update()  # Atualiza a janela para exibir a mensagem
@@ -146,11 +151,50 @@ def acessar_site():
 def nova_inscricao(navegador_param):
     adicionar_mensagem(f"Abrindo a página de marcação...")
     janela.update()  # Atualiza a janela para exibir a mensagem
-    # navegador_param.find_element(By.ID, 'btnEscala').click()
     WebDriverWait(navegador_param, timeout).until(
-        ec.element_to_be_clickable((By.ID, 'btnEscala'))).click()
+        ec.element_to_be_clickable((By.ID, "btnEscala"))
+    ).click()
     pesquisar_vaga(navegador_param)
+    """ processar_informacoes(navegador_param) """
 
+def processar_informacoes(navegador_param):
+    global tentativa
+    iterator = iter(informacoes_array)
+    for informacao in informacoes_array:
+        next_item = next(iterator, None)
+        if tentativa > 0:
+            is_alert(navegador_param)
+
+        selecionar_data_evento(navegador_param, informacao["data_servico"], timeout)
+
+        abrir_captcha(navegador_param, timeout)
+
+        if informacao["tipo_filtro"] == 1:
+            selecionar_convenio(navegador_param, informacao["local_servico"], timeout)
+        else:
+            selecionar_cpa(navegador_param, informacao["local_servico"], timeout)
+
+        interagir_com_captcha(navegador_param, timeout, hora_limite)
+
+        if informacao["tipo_filtro"] == 2:
+            tentativa = 1
+            convenio_xcpa = None
+            while not convenio_xcpa:
+                try:
+                    convenio_xcpa = WebDriverWait(navegador_param, timeout).until(
+                        ec.element_to_be_clickable(
+                            (By.LINK_TEXT, f"{informacao['localxcpa_servico']}")
+                        )
+                    )
+                except StaleElementReferenceException:
+                    tentativa += 1
+
+            navegador_param.execute_script("arguments[0].click();", convenio_xcpa)
+
+        while verifica_vaga_visivel(navegador_param):
+            break
+
+        selecionar_vaga(navegador_param, informacao, next_item)
 
 def pesquisar_vaga(navegador_param):
     is_mensagem = False
@@ -162,13 +206,18 @@ def pesquisar_vaga(navegador_param):
             current_time = datetime.now().time()
             if current_time >= datetime.strptime("06:00:00", "%H:%M:%S").time():
                 WebDriverWait(navegador_param, timeout).until(
-                    ec.element_to_be_clickable((By.ID, 'btnNovaInscricao'))).click()
+                    ec.element_to_be_clickable((By.ID, "btnNovaInscricao"))
+                ).click()
                 break
     else:
         WebDriverWait(navegador_param, timeout).until(
-            ec.element_to_be_clickable((By.ID, 'btnNovaInscricao'))).click()
+            ec.element_to_be_clickable((By.ID, "btnNovaInscricao"))
+        ).click()
     tentativa = 0
+
+    iterator = iter(informacoes_array)
     for informacao in informacoes_array:
+        next_item = next(iterator, None)
         if tentativa > 0:
             is_alert(navegador_param)
 
@@ -177,12 +226,14 @@ def pesquisar_vaga(navegador_param):
         tentativa = 1
         while not select_data_evento:
             try:
-                select_data_evento = Select(WebDriverWait(navegador_param, timeout).until(ec.element_to_be_clickable(
-                    (By.ID, 'ddlDataEvento'))))  # METODO QUE AGUARDA ATÉ X SEGUNDOS O ID SER CARREGADO NA PÁGINA
-                select_data_evento.select_by_visible_text(informacao['data_servico'])
+                select_data_evento = Select(
+                    WebDriverWait(navegador_param, timeout).until(
+                        ec.element_to_be_clickable((By.ID, "ddlDataEvento"))
+                    )
+                )  # METODO QUE AGUARDA ATÉ X SEGUNDOS O ID SER CARREGADO NA PÁGINA
+                select_data_evento.select_by_visible_text(informacao["data_servico"])
             except StaleElementReferenceException:
                 select_data_evento = None
-                print(f"Erro ao selecionar Data do evento: {tentativa}")
                 tentativa = tentativa + 1
 
             # ________________________________________________________________________________________________________________________________________________________________#
@@ -194,7 +245,8 @@ def pesquisar_vaga(navegador_param):
         while not abri_captcha_click:
             try:
                 abri_captcha_click = WebDriverWait(navegador_param, timeout).until(
-                    ec.element_to_be_clickable((By.ID, 'lnkNewCaptcha')))
+                    ec.element_to_be_clickable((By.ID, "lnkNewCaptcha"))
+                )
                 if abri_captcha_click is not None:
                     abri_captcha_click.click()
 
@@ -206,27 +258,27 @@ def pesquisar_vaga(navegador_param):
 
             except ElementClickInterceptedException:
                 abri_captcha_click = None
-                print(f"Erro ElementClickInterceptedException ao clicar para exibir imagem do captcha.")
             except StaleElementReferenceException:
                 abri_captcha_click = None
-                print(
-                    f"Erro StaleElementReferenceException ao localizar elemento para clicar e exibir imagem do "
-                    f"captcha.")
 
         # ________________________________________________________________________________________________________________________________________________________________#
 
         # SELECIONA A VAGA PELO CONVÊNIO
-        if informacao['tipo_filtro'] == 1:
+        if informacao["tipo_filtro"] == 1:
             select_convenio = None
             tentativa = 1
             while not select_convenio:
                 try:
-                    select_convenio = Select(WebDriverWait(navegador_param, timeout).until(ec.element_to_be_clickable(
-                        (By.ID, 'ddlConvenios'))))  # METODO QUE AGUARDA ATÉ X SEGUNDOS O ID SER CARREGADO NA PÁGINA
-                    select_convenio.select_by_visible_text(informacao['local_servico'])  # CARREGA PELA DESCRIÇÃO
+                    select_convenio = Select(
+                        WebDriverWait(navegador_param, timeout).until(
+                            ec.element_to_be_clickable((By.ID, "ddlConvenios"))
+                        )
+                    )  # METODO QUE AGUARDA ATÉ X SEGUNDOS O ID SER CARREGADO NA PÁGINA
+                    select_convenio.select_by_visible_text(
+                        informacao["local_servico"]
+                    )  # CARREGA PELA DESCRIÇÃO
                 except StaleElementReferenceException:
-                    select_convenio = None
-                    print(f"Erro ao selecionar convênio: {tentativa}")
+                    select_convenio = None                    
                     tentativa = tentativa + 1
 
         # SELECIONA A VAGA PELO CPA
@@ -235,12 +287,16 @@ def pesquisar_vaga(navegador_param):
             tentativa = 1
             while not select_cpa:
                 try:
-                    select_cpa = Select(WebDriverWait(navegador_param, timeout).until(ec.element_to_be_clickable(
-                        (By.ID, 'ddlCPAS'))))  # METODO QUE AGUARDA ATÉ X SEGUNDOS O ID SER CARREGADO NA PÁGINA
-                    select_cpa.select_by_visible_text(informacao['local_servico'])  # CARREGA PELA DESCRIÇÃO
+                    select_cpa = Select(
+                        WebDriverWait(navegador_param, timeout).until(
+                            ec.element_to_be_clickable((By.ID, "ddlCPAS"))
+                        )
+                    )  # METODO QUE AGUARDA ATÉ X SEGUNDOS O ID SER CARREGADO NA PÁGINA
+                    select_cpa.select_by_visible_text(
+                        informacao["local_servico"]
+                    )  # CARREGA PELA DESCRIÇÃO
                 except StaleElementReferenceException:
-                    select_cpa = None
-                    print(f"Erro ao selecionar CPA: {tentativa}")
+                    select_cpa = None                    
                     tentativa = tentativa + 1
 
         tentativa = 1
@@ -248,20 +304,21 @@ def pesquisar_vaga(navegador_param):
         while not is_ok:
             try:
                 # print(navegador.page_source)
-                # Usar XPath para encontrar o campo de entrada
-
                 # Garante que o elemento seja visível e clicável
                 input_field = WebDriverWait(navegador_param, timeout).until(
-                    ec.visibility_of_element_located((By.XPATH, '//*[@id="TextCaptcha"]'))
+                    ec.visibility_of_element_located(
+                        (By.XPATH, '//*[@id="TextCaptcha"]')
+                    )
                 )
 
                 WebDriverWait(navegador_param, timeout).until(
                     ec.element_to_be_clickable((By.XPATH, '//*[@id="TextCaptcha"]'))
                 )
                 input_field.clear()
-                #input_field.click()
                 # Executa o clique via JavaScript e coloca o foco no campo
-                navegador_param.execute_script("arguments[0].click(); arguments[0].focus();", input_field)
+                navegador_param.execute_script(
+                    "arguments[0].click(); arguments[0].focus();", input_field
+                )
 
                 # Loop para monitorar continuamente a entrada e a hora
                 tentativa = 1
@@ -287,18 +344,33 @@ def pesquisar_vaga(navegador_param):
                         #     janela.update()  # Atualiza a janela para exibir a mensagem
 
                         input_field = WebDriverWait(navegador_param, timeout).until(
-                            ec.element_to_be_clickable((By.XPATH, '//*[@id="TextCaptcha"]'))
+                            ec.element_to_be_clickable(
+                                (By.XPATH, '//*[@id="TextCaptcha"]')
+                            )
                         )
+
                         current_time = datetime.now().time()
-                        if current_time < datetime.strptime("07:00:00", "%H:%M:%S").time():
+                        if (
+                            current_time
+                            < datetime.strptime("07:00:00", "%H:%M:%S").time()
+                        ):
                             if not is_mensagem:
                                 is_mensagem = True
-                                adicionar_mensagem(f"Aguardando o horário para iniciar a marcação do Proeis...")
+                                adicionar_mensagem(
+                                    f"Aguardando o horário para iniciar a marcação do Proeis..."
+                                )
                                 janela.update()  # Atualiza a janela para exibir a mensagem
-                        if check_input_and_time(input_field, hora_limite):
+                        # if check_input_and_time(input_field, hora_limite):
+                        if (
+                            hora_limite
+                            and check_input_and_time(input_field, hora_limite)
+                        ) or (
+                            not hora_limite and check_input_and_time(input_field, None)
+                        ):
                             # Encontrar e clicar no botão de login
                             WebDriverWait(navegador_param, timeout).until(
-                                ec.element_to_be_clickable((By.ID, 'btnConsultar'))).click()
+                                ec.element_to_be_clickable((By.ID, "btnConsultar"))
+                            ).click()
                             while verifica_local_visivel(navegador_param):
                                 break
                             alert = is_alert(navegador_param)
@@ -306,32 +378,31 @@ def pesquisar_vaga(navegador_param):
                                 is_ok = True
                                 break
                             else:
-                                adicionar_mensagem(f"captcha digitado é inválido, digite novamente!")
+                                adicionar_mensagem(
+                                    f"captcha digitado é inválido, digite novamente!"
+                                )
                                 janela.update()  # Atualiza a janela para exibir a mensagem
                     except StaleElementReferenceException:
-                        print(f"Erro ao clicar no elemento para consultar as vagas: {tentativa}")
                         tentativa += 1
                         # Esperar por um curto período para evitar uso excessivo de CPU
             except Exception as e:
-                print("Erro:", e)
-                print(f"Erro ao clicar no elemento para digitar o captcha. Tentavia {tentativa}")
                 tentativa += 1
                 if tentativa > 5:  # Número máximo de tentativas
-                    print("Número máximo de tentativas atingido. Saindo...")
                     navegador_param.quit()
                     break
 
-        if informacao['tipo_filtro'] == 2:
+        if informacao["tipo_filtro"] == 2:
             tentativa = 1
             convenio_xcpa = None
             while not convenio_xcpa:
                 try:
-                    convenio_xcpa = WebDriverWait(navegador_param, timeout).until(ec.element_to_be_clickable(
-                        (By.LINK_TEXT,
-                         f"{informacao['localxcpa_servico']}")))  # METODO QUE AGUARDA ATÉ X SEGUNDOS O ID SER CARREGADO
+                    convenio_xcpa = WebDriverWait(navegador_param, timeout).until(
+                        ec.element_to_be_clickable(
+                            (By.LINK_TEXT, f"{informacao['localxcpa_servico']}")
+                        )
+                    )  # METODO QUE AGUARDA ATÉ X SEGUNDOS O ID SER CARREGADO
                     # NA PÁGINA
                 except StaleElementReferenceException:
-                    print(f"Erro ao clicar no elemento de escolha do local onde possui os serviços: {tentativa}")
                     tentativa += 1
 
             # while verifica_local_visivel(navegador_param):
@@ -349,34 +420,37 @@ def pesquisar_vaga(navegador_param):
         while True:
             xpath_evento = f"//td[text()='{informacao['setor_servico']}' and following-sibling::td[text()='{informacao['hora_servico']}'] and following-sibling::td[text()='{informacao['turno_servico']}']]/following-sibling::td[@class='btnCollumn']/a"
             try:
-                elementos_evento = WebDriverWait(navegador_param, 20).until(
+                elementos_evento = WebDriverWait(navegador_param, 2).until(
                     ec.element_to_be_clickable((By.XPATH, xpath_evento))
                 )
 
                 # Verificar se o elemento é clicável e clicar nele
                 if elementos_evento.is_displayed() and elementos_evento.is_enabled():
-                    navegador_param.execute_script("arguments[0].click();", elementos_evento)
+                    navegador_param.execute_script(
+                        "arguments[0].click();", elementos_evento
+                    )
                     is_alert(navegador_param, 20)
                     adicionar_mensagem(
-                        f"Setor {informacao['setor_servico']} no dia {informacao['data_servico'][8:10]}/{informacao['data_servico'][5:7]}/{informacao['data_servico'][0:4]} às {informacao['hora_servico']} marcado com sucesso!")
+                        f"{informacao['setor_servico']} dia {informacao['data_servico'][8:10]}/{informacao['data_servico'][5:7]}/{informacao['data_servico'][0:4]} às {informacao['hora_servico']} marcado com sucesso!"
+                    )
                     janela.update()  # Atualiza a janela para exibir a mensagem
                     break
                 else:
                     adicionar_mensagem(
-                        f"Setor {informacao['setor_servico']} no dia {informacao['data_servico'][8:10]}/{informacao['data_servico'][5:7]}/{informacao['data_servico'][0:4]} às {informacao['hora_servico']} não encontrado!")
+                        f"{informacao['setor_servico']} dia {informacao['data_servico'][8:10]}/{informacao['data_servico'][5:7]}/{informacao['data_servico'][0:4]} às {informacao['hora_servico']} não encontrado!"
+                    )
                     janela.update()  # Atualiza a janela para exibir a mensagem
-                    continue
-            except TimeoutException:
-                print(f"Erro ao clicar no elemento de marcação da vaga: {tentativa}")
-                tentativa += 1
-                if tentativa > 5:  # Número máximo de tentativas
-                    print("Número máximo de tentativas atingido. Saindo...")
                     break
+            except TimeoutException:
+                if next_item is not None and next_item != informacoes_array[-1]:
+                    adicionar_mensagem(
+                        f"Setor {informacao['setor_servico']} no dia {informacao['data_servico'][8:10]}/{informacao['data_servico'][5:7]}/{informacao['data_servico'][0:4]} às {informacao['hora_servico']} não encontrado! Buscando próxima vaga..."
+                    )
+                    janela.update()  # Atualiza a janela para exibir a mensagem
+                break
             except WebDriverException as e:
-                print(f"Erro ao clicar no elemento de marcação da vaga: {tentativa} - {str(e)}")
                 tentativa += 1
                 if tentativa > 5:  # Número máximo de tentativas
-                    print("Número máximo de tentativas atingido. Saindo...")
                     break
         # ________________________________________________________________________________________________________________________________________________________________#
 
@@ -387,24 +461,192 @@ def pesquisar_vaga(navegador_param):
     navegador_param.quit()
 
 
+
+def selecionar_data_evento(navegador_param, data_servico, timeout):
+    select_data_evento = None
+    tentativa = 1
+    while not select_data_evento:
+        try:
+            select_data_evento = Select(
+                WebDriverWait(navegador_param, timeout).until(
+                    ec.element_to_be_clickable((By.ID, "ddlDataEvento"))
+                )
+            )
+            select_data_evento.select_by_visible_text(data_servico)
+        except StaleElementReferenceException:
+            select_data_evento = None
+            tentativa += 1
+
+
+def abrir_captcha(navegador_param, timeout):
+    adicionar_mensagem(f"Abrindo imagem do captcha, aguarde...")
+    janela.update()
+    abri_captcha_click = None
+    while not abri_captcha_click:
+        try:
+            abri_captcha_click = WebDriverWait(navegador_param, timeout).until(
+                ec.element_to_be_clickable((By.ID, "lnkNewCaptcha"))
+            )
+            if abri_captcha_click is not None:
+                abri_captcha_click.click()
+                while verifica_captcha_vaga_visivel(navegador_param):
+                    break
+                adicionar_mensagem(f"Imagem do captcha aberta!")
+                janela.update()
+        except ElementClickInterceptedException:
+            abri_captcha_click = None
+        except StaleElementReferenceException:
+            abri_captcha_click = None
+
+
+def selecionar_convenio(navegador_param, local_servico, timeout):
+    select_convenio = None
+    tentativa = 1
+    while not select_convenio:
+        try:
+            select_convenio = Select(
+                WebDriverWait(navegador_param, timeout).until(
+                    ec.element_to_be_clickable((By.ID, "ddlConvenios"))
+                )
+            )
+            select_convenio.select_by_visible_text(local_servico)
+        except StaleElementReferenceException:
+            select_convenio = None
+            tentativa += 1
+
+
+def selecionar_cpa(navegador_param, local_servico, timeout):
+    select_cpa = None
+    tentativa = 1
+    while not select_cpa:
+        try:
+            select_cpa = Select(
+                WebDriverWait(navegador_param, timeout).until(
+                    ec.element_to_be_clickable((By.ID, "ddlCPAS"))
+                )
+            )
+            select_cpa.select_by_visible_text(local_servico)
+        except StaleElementReferenceException:
+            select_cpa = None
+            tentativa += 1
+
+
+def interagir_com_captcha(navegador_param, timeout, hora_limite):
+    tentativa = 1
+    is_ok = False
+    while not is_ok:
+        try:
+            input_field = WebDriverWait(navegador_param, timeout).until(
+                ec.visibility_of_element_located((By.XPATH, '//*[@id="TextCaptcha"]'))
+            )
+            WebDriverWait(navegador_param, timeout).until(
+                ec.element_to_be_clickable((By.XPATH, '//*[@id="TextCaptcha"]'))
+            )
+            input_field.clear()
+            navegador_param.execute_script(
+                "arguments[0].click(); arguments[0].focus();", input_field
+            )
+
+            while True:
+                try:
+                    input_field = WebDriverWait(navegador_param, timeout).until(
+                        ec.element_to_be_clickable((By.XPATH, '//*[@id="TextCaptcha"]'))
+                    )
+
+                    current_time = datetime.now().time()
+                    if current_time < datetime.strptime("07:00:00", "%H:%M:%S").time():
+                        adicionar_mensagem(
+                            f"Aguardando o horário para iniciar a marcação do Proeis..."
+                        )
+                        janela.update()
+
+                    if (
+                        hora_limite and check_input_and_time(input_field, hora_limite)
+                    ) or (not hora_limite and check_input_and_time(input_field, None)):
+                        WebDriverWait(navegador_param, timeout).until(
+                            ec.element_to_be_clickable((By.ID, "btnConsultar"))
+                        ).click()
+                        while verifica_local_visivel(navegador_param):
+                            break
+                        alert = is_alert(navegador_param)
+                        if alert == 0:
+                            is_ok = True
+                            break
+                        else:
+                            adicionar_mensagem(
+                                f"Captcha digitado é inválido, digite novamente!"
+                            )
+                            janela.update()
+                except StaleElementReferenceException:
+                    tentativa += 1
+        except Exception as e:
+            tentativa += 1
+            if tentativa > 5:
+                navegador_param.quit()
+                break
+
+
+def selecionar_vaga(navegador_param, informacao, next_item):
+    xpath_evento = f"//td[text()='{informacao['setor_servico']}' and following-sibling::td[text()='{informacao['hora_servico']}'] and following-sibling::td[text()='{informacao['turno_servico']}']]/following-sibling::td[@class='btnCollumn']/a"
+    while True:
+        try:
+            elementos_evento = WebDriverWait(navegador_param, 2).until(
+                ec.element_to_be_clickable((By.XPATH, xpath_evento))
+            )
+
+            if elementos_evento.is_displayed() and elementos_evento.is_enabled():
+                navegador_param.execute_script(
+                    "arguments[0].click();", elementos_evento
+                )
+                is_alert(navegador_param, 20)
+                adicionar_mensagem(
+                    f"Setor {informacao['setor_servico']} no dia {informacao['data_servico'][8:10]}/{informacao['data_servico'][5:7]}/{informacao['data_servico'][0:4]} às {informacao['hora_servico']} marcado com sucesso!"
+                )
+                janela.update()
+                break
+            else:
+                adicionar_mensagem(
+                    f"Setor {informacao['setor_servico']} no dia {informacao['data_servico'][8:10]}/{informacao['data_servico'][5:7]}/{informacao['data_servico'][0:4]} às {informacao['hora_servico']} não encontrado!"
+                )
+                janela.update()
+                break
+        except TimeoutException:
+            if next_item is not None and next_item != informacoes_array[-1]:
+                adicionar_mensagem(
+                    f"Setor {informacao['setor_servico']} no dia {informacao['data_servico'][8:10]}/{informacao['data_servico'][5:7]}/{informacao['data_servico'][0:4]} às {informacao['hora_servico']} não encontrado! Buscando próxima vaga..."
+                )
+                janela.update()  # Atualiza a janela para exibir a mensagem
+            break
+
+
+
 # Função para verificar o comprimento da entrada
 def check_input_and_time(input_field, hora_limite_param):
     current_time = datetime.now().time()
-    input_value = input_field.get_attribute('value')
-    return len(input_value) >= 6 and current_time >= datetime.strptime(hora_limite_param, "%H:%M:%S").time()
+    input_value = input_field.get_attribute("value")
+    """ return (
+        len(input_value) >= 6
+        and current_time >= datetime.strptime(hora_limite_param, "%H:%M:%S").time()
+    ) """
+    if len(input_value) < 6:
+        return False
+
+    # Se hora_limite_param estiver vazio ou None, ignora a verificação da hora
+    if not hora_limite_param:
+        return True
+
+    # Verifica se a hora atual é maior ou igual a hora_limite_param
+    return current_time >= datetime.strptime(hora_limite_param, "%H:%M:%S").time()
 
 
 def check_input(input_field):
-    input_value = input_field.get_attribute('value')
+    input_value = input_field.get_attribute("value")
     return len(input_value) >= 6
 
 
 def resolver_captcha(caminho_imagem_origem):
     # Leitura da imagem
     imagem = cv2.imread(caminho_imagem_origem)
-
-    if imagem is None:
-        print(f"Erro ao ler a imagem: {caminho_imagem_origem}")
 
     # Conversão para escala de cinza
     imagem_cinza = cv2.cvtColor(imagem, cv2.COLOR_BGR2GRAY)
@@ -414,17 +656,23 @@ def resolver_captcha(caminho_imagem_origem):
     imagem_morf = cv2.morphologyEx(imagem_cinza, cv2.MORPH_CLOSE, kernel)
 
     # Aplicação de um método de limiarização
-    _, imagem_tratada = cv2.threshold(imagem_morf, 127, 255, cv2.THRESH_BINARY or cv2.THRESH_OTSU)
+    _, imagem_tratada = cv2.threshold(
+        imagem_morf, 127, 255, cv2.THRESH_BINARY or cv2.THRESH_OTSU
+    )
 
     # Caminho para o executável do Tesseract (necessário apenas no Windows)
-    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+    pytesseract.pytesseract.tesseract_cmd = (
+        r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+    )
 
     # Determinar o caminho absoluto para o diretório tessdata
-    caminho_tessdata = os.path.join(os.getcwd(), 'tessdata')
+    caminho_tessdata = os.path.join(os.getcwd(), "tessdata")
 
     # Configuração do diretório tessdata para Tesseract no Windows
     config_tessdata = f'--tessdata-dir "{caminho_tessdata}" --psm 7 -c tessedit_char_whitelist=0123456789aAbBcCdDeEfFgG'
-    texto = pytesseract.image_to_string(imagem_tratada, lang='por', config=config_tessdata)  # 'por' para português
+    texto = pytesseract.image_to_string(
+        imagem_tratada, lang="por", config=config_tessdata
+    )  # 'por' para português
 
     return texto
 
@@ -433,7 +681,12 @@ def verifica_captcha_vaga_visivel(navegador_param):
     try:
         WebDriverWait(navegador_param, timeout).until(
             ec.presence_of_element_located(
-                (By.XPATH, "//div[contains(@style, 'width: 300px; height: 91px; background: url')]")))
+                (
+                    By.XPATH,
+                    "//div[contains(@style, 'width: 300px; height: 91px; background: url')]",
+                )
+            )
+        )
     except InvalidSelectorException:
         return False
 
@@ -443,7 +696,7 @@ def verifica_captcha_vaga_visivel(navegador_param):
 def verifica_local_visivel(navegador_param):
     try:
         WebDriverWait(navegador_param, timeout).until(
-            ec.invisibility_of_element_located((By.ID, 'aguarde'))
+            ec.invisibility_of_element_located((By.ID, "aguarde"))
         )
     except TimeoutException:
         return False
@@ -458,7 +711,9 @@ def verifica_local_visivel(navegador_param):
 def verifica_vaga_visivel(navegador_param):
     try:
         elemento = WebDriverWait(navegador_param, timeout).until(
-            ec.presence_of_element_located((By.CSS_SELECTOR, "div[role='status'][aria-hidden='true']"))
+            ec.presence_of_element_located(
+                (By.CSS_SELECTOR, "div[role='status'][aria-hidden='true']")
+            )
         )
         style = elemento.get_attribute("style")
         if "display:none" in style:
@@ -474,7 +729,9 @@ def verifica_vaga_visivel(navegador_param):
 def is_dialog_invisible(navegador_param):
     try:
         elemento = WebDriverWait(navegador_param, 1).until(
-            ec.presence_of_element_located((By.CSS_SELECTOR, "div[role='status'][aria-hidden='true']"))
+            ec.presence_of_element_located(
+                (By.CSS_SELECTOR, "div[role='status'][aria-hidden='true']")
+            )
         )
         style = elemento.get_attribute("style")
         if "display:none" in style:
@@ -489,8 +746,8 @@ def is_dialog_invisible(navegador_param):
 
 def gera_imagem_captcha_login(navegador_param):
     div = navegador_param.find_element(By.XPATH, '//*[@id="captcha"]/div')
-    bg_url = div.value_of_css_property('background')
-    bg_url = re.split('[()]', bg_url)[3]
+    bg_url = div.value_of_css_property("background")
+    bg_url = re.split("[()]", bg_url)[3]
     bg_url = bg_url[23:]
 
     image_path = "imagelogin.png"
@@ -506,12 +763,12 @@ def gera_imagem_captcha_vaga(navegador_param):
     while not div:
         try:
             div = navegador_param.find_element(By.XPATH, '//*[@id="captcha"]/div')
-            bg_url = div.value_of_css_property('background')
-            bg_url = re.split('[()]', bg_url)[3]
+            bg_url = div.value_of_css_property("background")
+            bg_url = re.split("[()]", bg_url)[3]
             bg_url = bg_url[23:]
 
         except NoSuchElementException:
-            ""
+            """"""
     image_path = "imagevaga.png"
     with open(image_path, "wb") as fh:
         fh.write(base64.urlsafe_b64decode(bg_url))
@@ -521,7 +778,9 @@ def gera_imagem_captcha_vaga(navegador_param):
 
 def is_alert(navegador_param, timeoutalert=1):
     try:
-        alert = WebDriverWait(navegador_param, timeoutalert).until(ec.alert_is_present())
+        alert = WebDriverWait(navegador_param, timeoutalert).until(
+            ec.alert_is_present()
+        )
         if alert is not None:
             alert.accept()
             return 1
@@ -533,8 +792,9 @@ def is_alert(navegador_param, timeoutalert=1):
 
 def is_visible(navegador_param):
     try:
-        erro_captcha = WebDriverWait(navegador_param, 0).until(ec.presence_of_element_located(
-            (By.ID, 'lblLogin')))
+        erro_captcha = WebDriverWait(navegador_param, 0).until(
+            ec.presence_of_element_located((By.ID, "lblLogin"))
+        )
         if erro_captcha.is_displayed():
             return True
         else:
@@ -551,7 +811,9 @@ def adicionar_mensagem(mensagem):
 
 
 # Função para criar o efeito de alto relevo
-def create_embossed_frame(parent, row, column, bg_color="lightgray", bd=3, padx=5, pady=5):
+def create_embossed_frame(
+    parent, row, column, bg_color="lightgray", bd=3, padx=5, pady=5
+):
     frame = tk.Frame(parent, bg=bg_color, relief="raised", bd=bd)
     frame.grid(row=row, column=column, padx=padx, pady=pady, sticky="nsew")
 
@@ -578,7 +840,7 @@ text_area = None
 def abrir_janela():
     global janela
     janela = Tk()
-    janela.title('Sistema de Marcação')
+    janela.title("Sistema de Marcação")
     # Obtém a largura e altura da tela
     screen_width = janela.winfo_screenwidth()
     screen_height = janela.winfo_screenheight()
@@ -650,14 +912,20 @@ def abrir_janela():
             show_alert("Erro", "Usuário e senha não podem ser vazios.")
             return False
 
-        if OPTIONS_IDENTIFICACAO.index(tipo_identificacao.get()) == 1 and len(usuario) != 11:
-            show_alert("Erro", "Login do tipo CPF, o usuário deve ter exatamente 11 caracteres.")
+        if (
+            OPTIONS_IDENTIFICACAO.index(tipo_identificacao.get()) == 1
+            and len(usuario) != 11
+        ):
+            show_alert(
+                "Erro",
+                "Login do tipo CPF, o usuário deve ter exatamente 11 caracteres.",
+            )
             return False
 
-        horario_maracacao = OPTIONS_HORAMARCACAO.index(variable_horariomarcacao.get())
+        """ horario_maracacao = OPTIONS_HORAMARCACAO.index(variable_horariomarcacao.get())
         if horario_maracacao == 0:
             show_alert("Erro", "Informe o horário da marcação")
-            return False
+            return False """
         is_servico_selecionado = False
         for i in range(7):
             data_servico = data.index(variable_data_servico[i].get())
@@ -671,16 +939,24 @@ def abrir_janela():
                     show_alert("Erro", f"Convênio da linha {i + 1} não informado")
                     return False
                 if vaga_convenio == 0:
-                    show_alert("Erro", f"Vaga do convênio da linha {i + 1} não informado")
+                    show_alert(
+                        "Erro", f"Vaga do convênio da linha {i + 1} não informado"
+                    )
                     return False
                 if data_servico == 0:
-                    show_alert("Erro", f"Data do serviço da linha {i + 1} não informado")
+                    show_alert(
+                        "Erro", f"Data do serviço da linha {i + 1} não informado"
+                    )
                     return False
                 if horario_servico == 0:
-                    show_alert("Erro", f"Horario do serviço da linha {i + 1} não informado")
+                    show_alert(
+                        "Erro", f"Horario do serviço da linha {i + 1} não informado"
+                    )
                     return False
                 if turno_servico == 0:
-                    show_alert("Erro", f"Turno do serviço da linha {i + 1} não informado")
+                    show_alert(
+                        "Erro", f"Turno do serviço da linha {i + 1} não informado"
+                    )
                     return False
                 is_servico_selecionado = True
             elif cpa_vars[i].get():
@@ -689,23 +965,35 @@ def abrir_janela():
                     show_alert("Erro", f"CPA da linha {i + 1} não informado")
                     return False
                 locais_cpa = OPTIONS_LOCAISXCPA[variable_cpa[i].get()]
-                indice_local_selecionado = locais_cpa.index(variable_locais_cpa[i].get())
-                local_selecionado = OPTIONS_VAGASXLOCAIS_CPA[variable_locais_cpa[i].get()]
+                indice_local_selecionado = locais_cpa.index(
+                    variable_locais_cpa[i].get()
+                )
+                local_selecionado = OPTIONS_VAGASXLOCAIS_CPA[
+                    variable_locais_cpa[i].get()
+                ]
                 vaga_servico = local_selecionado.index(variable_vaga_servico[i].get())
                 if indice_local_selecionado == 0:
                     show_alert("Erro", f"Local da linha {i + 1} não informado")
                     return False
                 if data_servico == 0:
-                    show_alert("Erro", f"Data do serviço da linha {i + 1} não informado")
+                    show_alert(
+                        "Erro", f"Data do serviço da linha {i + 1} não informado"
+                    )
                     return False
                 if vaga_servico == 0:
-                    show_alert("Erro", f"Vaga do serviço da linha {i + 1} não informado")
+                    show_alert(
+                        "Erro", f"Vaga do serviço da linha {i + 1} não informado"
+                    )
                     return False
                 if horario_servico == 0:
-                    show_alert("Erro", f"Horario do serviço da linha {i + 1} não informado")
+                    show_alert(
+                        "Erro", f"Horario do serviço da linha {i + 1} não informado"
+                    )
                     return False
                 if turno_servico == 0:
-                    show_alert("Erro", f"Turno do serviço da linha {i + 1} não informado")
+                    show_alert(
+                        "Erro", f"Turno do serviço da linha {i + 1} não informado"
+                    )
                     return False
                 is_servico_selecionado = True
         if not is_servico_selecionado:
@@ -724,7 +1012,9 @@ def abrir_janela():
 
         # Conta o número de linhas na mensagem
         lines = message.count("\n") + 1
-        message_height = default_font.metrics("linespace") * lines + 80  # Adiciona espaço para botões
+        message_height = (
+            default_font.metrics("linespace") * lines + 80
+        )  # Adiciona espaço para botões
 
         # Calcula as coordenadas para centralizar a janela de alerta
         janela.update_idletasks()
@@ -732,7 +1022,7 @@ def abrir_janela():
         y = (janela.winfo_screenheight() // 2) - (message_height // 2)
 
         # Configura a geometria da janela de alerta para centralizá-la
-        alert_window.geometry(f'{message_width}x{message_height}+{x}+{y}')
+        alert_window.geometry(f"{message_width}x{message_height}+{x}+{y}")
 
         tk.Label(alert_window, text=message).pack(padx=10, pady=10)
         tk.Button(alert_window, text="OK", command=alert_window.destroy).pack(pady=10)
@@ -742,39 +1032,57 @@ def abrir_janela():
         if is_convenio:
             if convenio_vars[index].get() == 1:
                 cpa_vars[index].set(0)  # Desativa a checkbox de CPA
-                select_convenio[index].config(state='normal')
-                select_vagas_convenio[index].config(state='normal')
-                checkbuttons_cpa[index].config(state='disabled')
-                select_cpa[index].config(state='disabled')
-                select_locais_cpa[index].config(state='disabled')
-                select_vagas_locais_cpa[index].config(state='disabled')
+                select_convenio[index].config(state="normal")
+                select_vagas_convenio[index].config(state="normal")
+                checkbuttons_cpa[index].config(state="disabled")
+                select_cpa[index].config(state="disabled")
+                select_locais_cpa[index].config(state="disabled")
+                select_vagas_locais_cpa[index].config(state="disabled")
                 variable_cpa[index].set(OPTIONS_CPA[0])  # Reseta o OptionMenu de CPA
             else:
-                checkbuttons_cpa[index].config(state='normal')  # Ativa a checkbox de CPA
-                variable_convenio[index].set(OPTIONS_CONVENIO[0])  # Reseta o OptionMenu de Convênio
-                select_convenio[index].config(state='disabled')
-                select_vagas_convenio[index].config(state='disabled')
-                variable_vaga_servico[index].set("Selecione uma vaga")  # Reseta o OptionMenu de Convênio
+                checkbuttons_cpa[index].config(
+                    state="normal"
+                )  # Ativa a checkbox de CPA
+                variable_convenio[index].set(
+                    OPTIONS_CONVENIO[0]
+                )  # Reseta o OptionMenu de Convênio
+                select_convenio[index].config(state="disabled")
+                select_vagas_convenio[index].config(state="disabled")
+                variable_vaga_servico[index].set(
+                    "Selecione uma vaga"
+                )  # Reseta o OptionMenu de Convênio
         else:
             if cpa_vars[index].get() == 1:
                 convenio_vars[index].set(0)  # Desativa a checkbox de Convênio
-                checkbuttons_convenio[index].config(state='disabled')
-                select_convenio[index].config(state='disabled')
-                select_vagas_convenio[index].config(state='disabled')
-                select_cpa[index].config(state='normal')
-                select_vagas_locais_cpa[index].config(state='normal')
-                variable_convenio[index].set(OPTIONS_CONVENIO[0])  # Reseta o OptionMenu de Convênio
-                variable_vagas_convenio[index].set("Selecione uma vaga")  # Reseta o OptionMenu de Convênio
+                checkbuttons_convenio[index].config(state="disabled")
+                select_convenio[index].config(state="disabled")
+                select_vagas_convenio[index].config(state="disabled")
+                select_cpa[index].config(state="normal")
+                select_vagas_locais_cpa[index].config(state="normal")
+                variable_convenio[index].set(
+                    OPTIONS_CONVENIO[0]
+                )  # Reseta o OptionMenu de Convênio
+                variable_vagas_convenio[index].set(
+                    "Selecione uma vaga"
+                )  # Reseta o OptionMenu de Convênio
             else:
-                checkbuttons_convenio[index].config(state='normal')  # Ativa a checkbox de Convênio
+                checkbuttons_convenio[index].config(
+                    state="normal"
+                )  # Ativa a checkbox de Convênio
                 variable_cpa[index].set(OPTIONS_CPA[0])  # Reseta o OptionMenu de CPA
-                select_cpa[index].config(state='disabled')
-                select_locais_cpa[index].config(state='disabled')
-                select_vagas_locais_cpa[index].config(state='disabled')
-                select_vagas_locais_cpa[index].config(state='disabled')
-                variable_convenio[index].set(OPTIONS_CONVENIO[0])  # Reseta o OptionMenu de Convênio
-                variable_locais_cpa[index].set("Selecione o local")  # Reseta o OptionMenu de Convênio
-                variable_vaga_servico[index].set("Selecione uma vaga")  # Reseta o OptionMenu de Convênio
+                select_cpa[index].config(state="disabled")
+                select_locais_cpa[index].config(state="disabled")
+                select_vagas_locais_cpa[index].config(state="disabled")
+                select_vagas_locais_cpa[index].config(state="disabled")
+                variable_convenio[index].set(
+                    OPTIONS_CONVENIO[0]
+                )  # Reseta o OptionMenu de Convênio
+                variable_locais_cpa[index].set(
+                    "Selecione o local"
+                )  # Reseta o OptionMenu de Convênio
+                variable_vaga_servico[index].set(
+                    "Selecione uma vaga"
+                )  # Reseta o OptionMenu de Convênio
 
     def btn_abrir_site_click():
         adicionar_mensagem(f"Validando as informações...")
@@ -787,25 +1095,29 @@ def abrir_janela():
             for index in range(7):
                 if convenio_vars[index].get():
                     # Adicionar as informações à lista
-                    informacoes_array.append({
-                        'local_servico': variable_convenio[index].get(),
-                        'tipo_filtro': 1,
-                        'data_servico': variable_data_servico[index].get(),
-                        'hora_servico': variable_horario_servico[index].get(),
-                        'setor_servico': variable_vagas_convenio[index].get(),
-                        'turno_servico': variable_turno_servico[index].get(),
-                    })
+                    informacoes_array.append(
+                        {
+                            "local_servico": variable_convenio[index].get(),
+                            "tipo_filtro": 1,
+                            "data_servico": variable_data_servico[index].get(),
+                            "hora_servico": variable_horario_servico[index].get(),
+                            "setor_servico": variable_vagas_convenio[index].get(),
+                            "turno_servico": variable_turno_servico[index].get(),
+                        }
+                    )
                 elif cpa_vars[index].get():
                     # Adicionar as informações à lista
-                    informacoes_array.append({
-                        'local_servico': variable_cpa[index].get(),
-                        'tipo_filtro': 2,
-                        'data_servico': variable_data_servico[index].get(),
-                        'hora_servico': variable_horario_servico[index].get(),
-                        'setor_servico': variable_vaga_servico[index].get(),
-                        'turno_servico': variable_turno_servico[index].get(),
-                        'localxcpa_servico': variable_locais_cpa[index].get()
-                    })
+                    informacoes_array.append(
+                        {
+                            "local_servico": variable_cpa[index].get(),
+                            "tipo_filtro": 2,
+                            "data_servico": variable_data_servico[index].get(),
+                            "hora_servico": variable_horario_servico[index].get(),
+                            "setor_servico": variable_vaga_servico[index].get(),
+                            "turno_servico": variable_turno_servico[index].get(),
+                            "localxcpa_servico": variable_locais_cpa[index].get(),
+                        }
+                    )
 
             adicionar_mensagem(f"Abrindo a página do site...")
             janela.update()  # Atualiza a janela para exibir a mensagem
@@ -813,60 +1125,76 @@ def abrir_janela():
 
     def update_locais_cpa(texto, index):
         locais_options = OPTIONS_LOCAISXCPA.get(texto, [])
-        variable_locais_cpa[index].set(locais_options[0] if locais_options else "Selecione um local")
-        menu = select_locais_cpa[index]['menu']
-        menu.delete(0, 'end')
+        variable_locais_cpa[index].set(
+            locais_options[0] if locais_options else "Selecione um local"
+        )
+        menu = select_locais_cpa[index]["menu"]
+        menu.delete(0, "end")
         if len(locais_options) > 0:
-            select_locais_cpa[index].config(state='normal')
+            select_locais_cpa[index].config(state="normal")
             for local in locais_options:
-                menu.add_command(label=local, command=lambda l=local, idx=index: (
-                    variable_locais_cpa[idx].set(l),
-                    update_vagas_locais_cpa(l, idx)
-                ))
+                menu.add_command(
+                    label=local,
+                    command=lambda l=local, idx=index: (
+                        variable_locais_cpa[idx].set(l),
+                        update_vagas_locais_cpa(l, idx),
+                    ),
+                )
         else:
             variable_locais_cpa[index].set(
-                locais_options[0] if locais_options else "Selecione um local")  # Reseta o OptionMenu de Locais do CPA
-            select_locais_cpa[index].config(state='disabled')
+                locais_options[0] if locais_options else "Selecione um local"
+            )  # Reseta o OptionMenu de Locais do CPA
+            select_locais_cpa[index].config(state="disabled")
 
     def update_vagas_locais_cpa(texto, index):
         vagas_options = OPTIONS_VAGASXLOCAIS_CPA.get(texto, [])
-        variable_vaga_servico[index].set(vagas_options[0] if vagas_options else "Selecione um local")
-        menu = select_vagas_locais_cpa[index]['menu']
-        menu.delete(0, 'end')
+        variable_vaga_servico[index].set(
+            vagas_options[0] if vagas_options else "Selecione um local"
+        )
+        menu = select_vagas_locais_cpa[index]["menu"]
+        menu.delete(0, "end")
         if len(vagas_options) > 0:
-            select_vagas_locais_cpa[index].config(state='normal')
+            select_vagas_locais_cpa[index].config(state="normal")
             for local in vagas_options:
-                menu.add_command(label=local, command=lambda l=local: variable_vaga_servico[index].set(l))
+                menu.add_command(
+                    label=local,
+                    command=lambda l=local: variable_vaga_servico[index].set(l),
+                )
         else:
             variable_vaga_servico[index].set(
-                vagas_options[0] if vagas_options else "Selecione um local")  # Reseta o OptionMenu de Locais do CPA
-            select_locais_cpa[index].config(state='disabled')
+                vagas_options[0] if vagas_options else "Selecione um local"
+            )  # Reseta o OptionMenu de Locais do CPA
+            select_locais_cpa[index].config(state="disabled")
 
     def update_locais_convenio(texto, index):
         locais_options = OPTIONS_VAGASXCONVENIO.get(texto, [])
-        variable_vagas_convenio[index].set(locais_options[0] if locais_options else "Selecione uma vaga")
-        menu = select_vagas_convenio[index]['menu']
-        menu.delete(0, 'end')
+        variable_vagas_convenio[index].set(
+            locais_options[0] if locais_options else "Selecione uma vaga"
+        )
+        menu = select_vagas_convenio[index]["menu"]
+        menu.delete(0, "end")
 
         for local in locais_options:
-            menu.add_command(label=local, command=lambda l=local: variable_vagas_convenio[index].set(l))
+            menu.add_command(
+                label=local,
+                command=lambda l=local: variable_vagas_convenio[index].set(l),
+            )
 
     def search(event, options, combobox):
         value = event.widget.get()
-        if value == '':
-            combobox['values'] = options
+        if value == "":
+            combobox["values"] = options
         else:
             data = []
             for item in options:
                 if value.lower() in item.lower():
                     data.append(item)
-            combobox['values'] = data
+            combobox["values"] = data
 
     # Função para atualizar a variável hora_limite
     def update_hora_limite(value):
         global hora_limite
         hora_limite = value
-        print(f"Hora limite selecionada: {hora_limite}")
 
     # Função para validar que o usuário é apenas números
     def validar_entrada(texto):
@@ -875,38 +1203,53 @@ def abrir_janela():
     # OptionMenu para tipo de identificação
     tipo_identificacao = StringVar()
     tipo_identificacao.set(OPTIONS_IDENTIFICACAO[0])  # Valor padrão
-    tk.Label(janela, text="Tipo de Login:").grid(column=4, row=row, padx=5, pady=5, sticky='w')
-    option_identificacao = OptionMenu(janela, tipo_identificacao, *OPTIONS_IDENTIFICACAO)
+    tk.Label(janela, text="Tipo de Login:").grid(
+        column=4, row=row, padx=5, pady=5, sticky="w"
+    )
+    option_identificacao = OptionMenu(
+        janela, tipo_identificacao, *OPTIONS_IDENTIFICACAO
+    )
     option_identificacao.grid(column=5, row=row, padx=5, pady=5)
     option_identificacao.config(width=20)  # Define um tamanho fixo para o OptionMenu
 
     row += 1
 
     # Validação para garantir que o usuário seja apenas números
-    vcmd = (janela.register(validar_entrada), '%P')
+    vcmd = (janela.register(validar_entrada), "%P")
 
     # Label e Entry para Usuário
-    tk.Label(janela, text="Usuário:").grid(column=4, row=row, padx=5, pady=5, sticky='w')
+    tk.Label(janela, text="Usuário:").grid(
+        column=4, row=row, padx=5, pady=5, sticky="w"
+    )
     entry_usuario = tk.Entry(janela, validate="key", validatecommand=vcmd, width=26)
     entry_usuario.grid(column=5, row=row, padx=5, pady=5)
 
     row += 1
 
     # Label e Entry para Senha
-    tk.Label(janela, text="Senha:").grid(column=4, row=row, padx=5, pady=5, sticky='w')
+    tk.Label(janela, text="Senha:").grid(column=4, row=row, padx=5, pady=5, sticky="w")
     entry_senha = tk.Entry(janela, show="*", width=26)
     entry_senha.grid(column=5, row=row, padx=5, pady=5)
 
     row += 1
 
     # Criação do OptionMenu para horário de marcação fora do loop
-    tk.Label(janela, text="Horario de marcação:").grid(column=4, row=row, padx=5, pady=5, sticky='w')
+    tk.Label(janela, text="Horario de marcação:").grid(
+        column=4, row=row, padx=5, pady=5, sticky="w"
+    )
     variable_horariomarcacao = StringVar(janela)
     variable_horariomarcacao.set(OPTIONS_HORAMARCACAO[0])
-    hora_limite = OPTIONS_HORAMARCACAO[0]  # Inicializa hora_limite com o primeiro valor de OPTIONS_HORAMARCACAO
+    OPTIONS_HORAMARCACAO[
+        0
+    ]  # Inicializa hora_limite com o primeiro valor de OPTIONS_HORAMARCACAO
 
     # OptionMenu para horário de marcação
-    w_horariomarcacao = OptionMenu(janela, variable_horariomarcacao, *OPTIONS_HORAMARCACAO, command=update_hora_limite)
+    w_horariomarcacao = OptionMenu(
+        janela,
+        variable_horariomarcacao,
+        *OPTIONS_HORAMARCACAO,
+        command=update_hora_limite,
+    )
     w_horariomarcacao.grid(column=5, row=row, padx=5, pady=5)
     w_horariomarcacao.config(width=20)  # Define um tamanho fixo para o OptionMenu
 
@@ -916,7 +1259,9 @@ def abrir_janela():
     # embossed_frame_cpa = create_embossed_frame(janela, row, 1, padx=10, pady=10)
     for i in range(7):
         convenio_vars.append(IntVar())
-        convenio_check = Checkbutton(janela, text='Convênio:', onvalue=1, offvalue=0, variable=convenio_vars[i])
+        convenio_check = Checkbutton(
+            janela, text="Convênio:", onvalue=1, offvalue=0, variable=convenio_vars[i]
+        )
         convenio_check.grid(column=column, row=row, padx=(5, 2), pady=5, sticky="w")
         checkbuttons_convenio.append(convenio_check)
         convenio_check.config(command=lambda index=i: on_checkbox_click(index, True))
@@ -924,9 +1269,13 @@ def abrir_janela():
 
         variable_convenio.append(StringVar(janela))
         variable_convenio[i].set(OPTIONS_CONVENIO[0])
-        w_convenio = OptionMenu(janela, variable_convenio[i], *OPTIONS_CONVENIO,
-                                command=lambda value, idx=i: update_locais_convenio(value, idx))
-        w_convenio.config(state='disabled')
+        w_convenio = OptionMenu(
+            janela,
+            variable_convenio[i],
+            *OPTIONS_CONVENIO,
+            command=lambda value, idx=i: update_locais_convenio(value, idx),
+        )
+        w_convenio.config(state="disabled")
         w_convenio.grid(column=column, row=row, padx=(5, 2), pady=5, sticky="w")
         select_convenio.append(w_convenio)
 
@@ -935,13 +1284,15 @@ def abrir_janela():
         variable_vagas_convenio.append(StringVar(janela))
         variable_vagas_convenio[i].set("Selecione uma vaga")
         w_vagas_convenio = OptionMenu(janela, variable_vagas_convenio[i], "")
-        w_vagas_convenio.config(state='disabled')
+        w_vagas_convenio.config(state="disabled")
         w_vagas_convenio.grid(column=column, row=row, padx=5, pady=5)
         select_vagas_convenio.append(w_vagas_convenio)
         column += 1
 
         cpa_vars.append(IntVar())
-        cpa_check = Checkbutton(janela, text='CPA: ', onvalue=1, offvalue=0, variable=cpa_vars[i])
+        cpa_check = Checkbutton(
+            janela, text="CPA: ", onvalue=1, offvalue=0, variable=cpa_vars[i]
+        )
         cpa_check.grid(column=column, row=row, padx=5, pady=5)
         checkbuttons_cpa.append(cpa_check)
         cpa_check.config(command=lambda index=i: on_checkbox_click(index, False))
@@ -949,9 +1300,13 @@ def abrir_janela():
 
         variable_cpa.append(StringVar(janela))
         variable_cpa[i].set(OPTIONS_CPA[0])
-        w_cpa = OptionMenu(janela, variable_cpa[i], *OPTIONS_CPA,
-                           command=lambda value, idx=i: update_locais_cpa(value, idx))
-        w_cpa.config(state='disabled')
+        w_cpa = OptionMenu(
+            janela,
+            variable_cpa[i],
+            *OPTIONS_CPA,
+            command=lambda value, idx=i: update_locais_cpa(value, idx),
+        )
+        w_cpa.config(state="disabled")
         w_cpa.grid(column=column, row=row, padx=5, pady=5)
         select_cpa.append(w_cpa)
         column += 1
@@ -959,7 +1314,7 @@ def abrir_janela():
         variable_locais_cpa.append(StringVar(janela))
         variable_locais_cpa[i].set("Selecione o local")
         w_locaiscpa = OptionMenu(janela, variable_locais_cpa[i], "")
-        w_locaiscpa.config(state='disabled')
+        w_locaiscpa.config(state="disabled")
         w_locaiscpa.grid(column=column, row=row, padx=5, pady=5)
         select_locais_cpa.append(w_locaiscpa)
         column += 1
@@ -967,7 +1322,7 @@ def abrir_janela():
         variable_vaga_servico.append(StringVar(janela))
         variable_vaga_servico[i].set("Selecione uma vaga")
         w_vaga = OptionMenu(janela, variable_vaga_servico[i], *OPTIONS_VAGASXLOCAIS_CPA)
-        w_vaga.config(state='disabled')
+        w_vaga.config(state="disabled")
         w_vaga.grid(column=column, row=row, padx=5, pady=5)
         select_vagas_locais_cpa.append(w_vaga)
         column += 1
@@ -986,14 +1341,18 @@ def abrir_janela():
 
         variable_turno_servico.append(StringVar(janela))
         variable_turno_servico[i].set(OPTIONS_TURNOSERVICO[0])
-        w_turnoservico = OptionMenu(janela, variable_turno_servico[i], *OPTIONS_TURNOSERVICO)
+        w_turnoservico = OptionMenu(
+            janela, variable_turno_servico[i], *OPTIONS_TURNOSERVICO
+        )
         w_turnoservico.grid(column=column, row=row, padx=5, pady=5)
 
         row += 1
         i += 1
         column = 0
 
-    btn_abrir_siste = Button(janela, text='Iniciar marcação', command=btn_abrir_site_click)
+    btn_abrir_siste = Button(
+        janela, text="Iniciar marcação", command=btn_abrir_site_click
+    )
     btn_abrir_siste.grid(column=5, row=row, padx=10, pady=10)
 
     row += 1
@@ -1005,7 +1364,7 @@ def abrir_janela():
 
     # Barra de rolagem para a área de texto
     scrollbar = Scrollbar(janela, command=text_area.yview)
-    scrollbar.grid(row=row, column=11, sticky='ns')
+    scrollbar.grid(row=row, column=11, sticky="ns")
     text_area.config(yscrollcommand=scrollbar.set)
 
     # Impede que o usuário edite a área de texto diretamente
@@ -1018,5 +1377,5 @@ def abrir_janela():
     janela.mainloop()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     abrir_janela()
