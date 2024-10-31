@@ -422,7 +422,7 @@ def pesquisar_vaga(navegador_param):
         while True:
             xpath_evento = f"//td[text()='{informacao['setor_servico']}' and following-sibling::td[text()='{informacao['hora_servico']}'] and following-sibling::td[text()='{informacao['turno_servico']}']]/following-sibling::td[@class='btnCollumn']/a"
             try:
-                elementos_evento = WebDriverWait(navegador_param, 2).until(
+                elementos_evento = WebDriverWait(navegador_param, 5).until(
                     ec.element_to_be_clickable((By.XPATH, xpath_evento))
                 )
 
@@ -444,12 +444,19 @@ def pesquisar_vaga(navegador_param):
                     janela.update()  # Atualiza a janela para exibir a mensagem
                     break
             except TimeoutException:
-                if next_item is not None and next_item != informacoes_array[-1]:
+                tentativa += 1
+                if (
+                    tentativa > 2
+                    and next_item is not None
+                    and next_item != informacoes_array[-1]
+                ):
                     adicionar_mensagem(
                         f"Setor {informacao['setor_servico']} no dia {informacao['data_servico'][8:10]}/{informacao['data_servico'][5:7]}/{informacao['data_servico'][0:4]} às {informacao['hora_servico']} não encontrado! Buscando próxima vaga..."
                     )
                     janela.update()  # Atualiza a janela para exibir a mensagem
-                break
+                    break
+                else:
+                    continue
             except WebDriverException as e:
                 tentativa += 1
                 if tentativa > 5:  # Número máximo de tentativas
