@@ -19,6 +19,7 @@ from identificadores import *
 from selenium.webdriver.chrome.service import Service
 from tkinter import *
 import tkinter as tk
+from tkinter import messagebox
 from tkinter import font as tkfont
 import pandas as pd
 from datetime import datetime, date
@@ -27,7 +28,11 @@ from dateutil.relativedelta import relativedelta, SU
 import pytesseract
 import cv2
 import numpy as np
+from dotenv import load_dotenv
 import os
+import requests
+import jwt
+
 
 # Uso de Condições de Espera
 
@@ -40,6 +45,16 @@ import os
 
 timeout = 60
 tentativa = 0
+decoded_data = None
+janela = None
+usuario = None
+senha = None
+tipo_login = None
+hora_limite = None
+text_area = None
+
+# Carrega as variáveis do arquivo .env
+load_dotenv()
 
 
 def acessar_site():
@@ -832,18 +847,6 @@ def create_embossed_frame(
     return frame
 
 
-# Criar uma lista vazia para armazenar as informações
-# informacoes_array = []
-
-# Definindo a variável global no nível do módulo
-janela = None
-usuario = None
-senha = None
-tipo_login = None
-hora_limite = None
-text_area = None
-
-
 def abrir_janela():
     global janela
     janela = Tk()
@@ -1389,5 +1392,102 @@ def abrir_janela():
     janela.mainloop()
 
 
+def login():
+
+    def mostrar_mensagem_centralizada(titulo, mensagem):
+        # Cria uma nova janela de diálogo centrada
+        dialogo = Toplevel(janela_login)
+        dialogo.title(titulo)
+        dialogo.geometry("300x100")
+
+        # Centraliza a janela de diálogo
+        largura_dialogo = 300
+        altura_dialogo = 100
+        largura_tela = dialogo.winfo_screenwidth()
+        altura_tela = dialogo.winfo_screenheight()
+        pos_x = (largura_tela - largura_dialogo) // 2
+        pos_y = (altura_tela - altura_dialogo) // 2
+        dialogo.geometry(f"{largura_dialogo}x{altura_dialogo}+{pos_x}+{pos_y}")
+
+        # Adiciona uma mensagem e um botão OK
+        Label(dialogo, text=mensagem, wraplength=280, justify="center").pack(pady=10)
+        Button(dialogo, text="OK", command=dialogo.destroy).pack(pady=10)
+
+        # Torna o diálogo modal
+        dialogo.transient(janela_login)
+        dialogo.grab_set()
+        janela_login.wait_window(dialogo)
+
+    # Função para validar login via API
+    def validar_login(usuario, senha):
+
+        # Substitua a URL abaixo pela URL da sua API
+        url = "http://localhost:8000/login"
+        response = requests.post(url, json={"usuario": usuario, "senha": senha})
+
+        # Se a API retornar um status 200, login está correto
+        if response.status_code == 200:
+            global decoded_data
+            token = response.json().get("token")
+            secret_key = os.getenv("SECRET_KEY")
+            decoded_data = jwt.decode(token, secret_key, algorithms=["HS256"], options={"verify_exp": False})
+            return True
+        else:
+            return False
+
+    # Função para processar o login
+    def fazer_login():
+        usuario = entry_usuario.get()
+        senha = entry_senha.get()
+
+        if not usuario or not senha:
+            mostrar_mensagem_centralizada("Erro", "Por favor, preencha os campos de usuário e senha.")
+            """ messagebox.showerror("Erro", "Por favor, preencha os campos de usuário e senha.") """
+            return  # Interrompe a função se os campos não estiverem preenchidos
+        try:
+            if validar_login(usuario, senha):
+                janela_login.destroy()  # Fecha a janela de login
+                abrir_janela()  # Abre a janela principal
+            else:
+                mostrar_mensagem_centralizada("Erro", "Usuário ou senha incorretos.")
+                """ messagebox.showerror("Erro", "Usuário ou senha incorretos.") """
+        except requests.RequestException as e:
+            messagebox.showerror("Erro", f"Erro de conexão: {e}")
+
+    # Configuração da janela de login
+    janela_login = Tk()
+    janela_login.title("Login")
+    janela_login.geometry("300x200")
+
+    # Centraliza a janela na tela
+    largura_janela = 300
+    altura_janela = 200
+
+    largura_tela = janela_login.winfo_screenwidth()
+    altura_tela = janela_login.winfo_screenheight()
+
+    pos_x = (largura_tela - largura_janela) // 2
+    pos_y = (altura_tela - altura_janela) // 2
+
+    janela_login.geometry(f"{largura_janela}x{altura_janela}+{pos_x}+{pos_y}")
+
+    # Widgets de login
+    label_usuario = tk.Label(janela_login, text="Usuário:")
+    label_usuario.pack(pady=5)
+    entry_usuario = tk.Entry(janela_login)
+    entry_usuario.pack(pady=5)
+
+    label_senha = tk.Label(janela_login, text="Senha:")
+    label_senha.pack(pady=5)
+    entry_senha = tk.Entry(janela_login, show="*")
+    entry_senha.pack(pady=5)
+
+    botao_login = tk.Button(janela_login, text="Login", command=fazer_login)
+    botao_login.pack(pady=20)
+
+    janela_login.mainloop()
+
+
 if __name__ == "__main__":
     abrir_janela()
+    """ login() """
