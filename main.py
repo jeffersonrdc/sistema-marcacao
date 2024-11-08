@@ -32,6 +32,7 @@ from dotenv import load_dotenv
 import os
 import requests
 import jwt
+from frm_login import LoginWindow
 
 
 # Uso de Condições de Espera
@@ -426,9 +427,6 @@ def pesquisar_vaga(navegador_param):
             #     break
 
             navegador_param.execute_script("arguments[0].click();", convenio_xcpa)
-        # else:
-        #     while verifica_local_visivel(navegador_param):
-        #         break
         tentativa = 1
 
         while verifica_vaga_visivel(navegador_param):
@@ -1195,17 +1193,6 @@ def abrir_janela():
                 command=lambda l=local: variable_vagas_convenio[index].set(l),
             )
 
-    def search(event, options, combobox):
-        value = event.widget.get()
-        if value == "":
-            combobox["values"] = options
-        else:
-            data = []
-            for item in options:
-                if value.lower() in item.lower():
-                    data.append(item)
-            combobox["values"] = data
-
     # Função para atualizar a variável hora_limite
     def update_hora_limite(value):
         global hora_limite
@@ -1430,7 +1417,9 @@ def login():
             global decoded_data
             token = response.json().get("token")
             secret_key = os.getenv("SECRET_KEY")
-            decoded_data = jwt.decode(token, secret_key, algorithms=["HS256"], options={"verify_exp": False})
+            decoded_data = jwt.decode(
+                token, secret_key, algorithms=["HS256"], options={"verify_exp": False}
+            )
             return True
         else:
             return False
@@ -1441,7 +1430,9 @@ def login():
         senha = entry_senha.get()
 
         if not usuario or not senha:
-            mostrar_mensagem_centralizada("Erro", "Por favor, preencha os campos de usuário e senha.")
+            mostrar_mensagem_centralizada(
+                "Erro", "Por favor, preencha os campos de usuário e senha."
+            )
             """ messagebox.showerror("Erro", "Por favor, preencha os campos de usuário e senha.") """
             return  # Interrompe a função se os campos não estiverem preenchidos
         try:
@@ -1489,5 +1480,6 @@ def login():
 
 
 if __name__ == "__main__":
-    abrir_janela()
-    """ login() """
+    """ abrir_janela() """
+    frm_login = LoginWindow()
+    frm_login.start()
