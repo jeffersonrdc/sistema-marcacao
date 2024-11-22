@@ -434,9 +434,14 @@ def pesquisar_vaga(navegador_param):
         while True:
             xpath_evento = f"//td[text()='{informacao['setor_servico']}' and following-sibling::td[text()='{informacao['hora_servico']}'] and following-sibling::td[text()='{informacao['turno_servico']}']]/following-sibling::td[@class='btnCollumn']/a"
             try:
-                elementos_evento = WebDriverWait(navegador_param, 5).until(
-                    ec.element_to_be_clickable((By.XPATH, xpath_evento))
-                )
+                if informacao["tipo_filtro"] == 2:
+                    elementos_evento = WebDriverWait(navegador_param, 5).until(
+                        ec.element_to_be_clickable((By.XPATH, xpath_evento))
+                    )
+                else:
+                    elementos_evento = WebDriverWait(navegador_param, timeout).until(
+                        ec.element_to_be_clickable((By.XPATH, xpath_evento))
+                    )
 
                 # Verificar se o elemento é clicável e clicar nele
                 if elementos_evento.is_displayed() and elementos_evento.is_enabled():
