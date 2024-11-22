@@ -14,11 +14,28 @@ from selenium.common.exceptions import (
 )
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.chrome.service import Service
+from datetime import datetime
+import time as t
+
 from utils import adicionar_mensagem
+from utils import check_input, check_input_and_time
 
 timeout = 60
+text_area = None
+janela_marcacao = None
+dados_marcacao = None
+hora_marcacao = None
 
-def acessar_site(informacoes_array, info_usuario, text_area, janela_marcacao):
+
+def acessar_site(
+    info_marcacao, info_usuario, interface_text_area, interface_janela_marcacao
+):
+    global text_area, janela_marcacao, dados_marcacao, hora_marcacao
+    text_area = interface_text_area
+    janela_marcacao = interface_janela_marcacao
+    dados_marcacao = info_marcacao
+    hora_marcacao = info_usuario["hora_marcacao"]
+
     # # Configuração do Chrome em modo headless
     # chrome_options = Options()
     # chrome_options.add_argument('--headless')  # Executar em modo headless
@@ -52,14 +69,14 @@ def acessar_site(informacoes_array, info_usuario, text_area, janela_marcacao):
         )
     )
 
-    select.select_by_value(info_usuario['tipo_login'])
+    select.select_by_value(info_usuario["tipo_login"])
 
     WebDriverWait(navegador, timeout).until(
         ec.element_to_be_clickable((By.ID, "txtLogin"))
-    ).send_keys(info_usuario['usuario'])
+    ).send_keys(info_usuario["usuario"])
     WebDriverWait(navegador, timeout).until(
         ec.element_to_be_clickable((By.ID, "txtSenha"))
-    ).send_keys(info_usuario['senha'])
+    ).send_keys(info_usuario["senha"])
     # print(navegador.page_source)
 
     # Encontrar o campo de entrada
@@ -106,7 +123,7 @@ def acessar_site(informacoes_array, info_usuario, text_area, janela_marcacao):
                     # Manter o foco no campo de entrada se o texto for inválido
                     WebDriverWait(navegador, timeout).until(
                         ec.element_to_be_clickable((By.ID, "txtSenha"))
-                    ).send_keys(senha)
+                    ).send_keys(info_usuario["senha"])
 
                     WebDriverWait(navegador, timeout).until(
                         ec.element_to_be_clickable((By.ID, "TextCaptcha"))
@@ -126,19 +143,20 @@ def acessar_site(informacoes_array, info_usuario, text_area, janela_marcacao):
 
 def nova_inscricao(navegador_param):
     adicionar_mensagem(f"Abrindo a página de marcação...")
-    janela.update()  # Atualiza a janela para exibir a mensagem
+    janela_marcacao.update()  # Atualiza a janela para exibir a mensagem
     WebDriverWait(navegador_param, timeout).until(
         ec.element_to_be_clickable((By.ID, "btnEscala"))
     ).click()
     pesquisar_vaga(navegador_param)
     """ processar_informacoes(navegador_param) """
 
+
 def pesquisar_vaga(navegador_param):
     is_mensagem = False
     current_time = datetime.now().time()
     if current_time < datetime.strptime("06:00:00", "%H:%M:%S").time():
         adicionar_mensagem(f"Aguardando o horário para iniciar a marcação do RAS...")
-        janela.update()  # Atualiza a janela para exibir a mensagem
+        janela_marcacao.update()  # Atualiza a janela para exibir a mensagem
         while True:
             current_time = datetime.now().time()
             if current_time >= datetime.strptime("06:00:00", "%H:%M:%S").time():
@@ -152,8 +170,8 @@ def pesquisar_vaga(navegador_param):
         ).click()
     tentativa = 0
 
-    iterator = iter(informacoes_array)
-    for informacao in informacoes_array:
+    iterator = iter(dados_marcacao)
+    for informacao in dados_marcacao:
         next_item = next(iterator, None)
         if tentativa > 0:
             is_alert(navegador_param)
@@ -177,7 +195,7 @@ def pesquisar_vaga(navegador_param):
 
         # CLICA NO LINK PARA EXIBIR O CAPTCHA
         adicionar_mensagem(f"Abrindo imagem do captcha, aguarde...")
-        janela.update()  # Atualiza a janela para exibir a mensagem
+        janela_marcacao.update()  # Atualiza a janela para exibir a mensagem
         abri_captcha_click = None
         while not abri_captcha_click:
             try:
@@ -191,7 +209,7 @@ def pesquisar_vaga(navegador_param):
                         break
 
                     adicionar_mensagem(f"Imagem do captcha aberta!")
-                    janela.update()  # Atualiza a janela para exibir a mensagem
+                    janela_marcacao.update()  # Atualiza a janela para exibir a mensagem
 
             except ElementClickInterceptedException:
                 abri_captcha_click = None
@@ -264,7 +282,7 @@ def pesquisar_vaga(navegador_param):
                         # current_time = datetime.now().time()
                         # if current_time < datetime.strptime("07:00:00", "%H:%M:%S").time():
                         #     adicionar_mensagem(f"Aguardando o horário para iniciar a marcação do Proeis...")
-                        #     janela.update()  # Atualiza a janela para exibir a mensagem
+                        #     janela_marcacao.update()  # Atualiza a janela para exibir a mensagem
                         # imagem = gera_imagem_captcha_vaga(navegador_param)
                         # texto_captcha = resolver_captcha(imagem)
                         # navegador_param.find_element(By.ID, 'TextCaptcha').send_keys(texto_captcha)
@@ -278,7 +296,7 @@ def pesquisar_vaga(navegador_param):
                         #     break
                         # else:
                         #     adicionar_mensagem(f"captcha é inválido, irei tentar novamente!")
-                        #     janela.update()  # Atualiza a janela para exibir a mensagem
+                        #     janela_marcacao.update()  # Atualiza a janela para exibir a mensagem
 
                         input_field = WebDriverWait(navegador_param, timeout).until(
                             ec.element_to_be_clickable(
@@ -296,13 +314,14 @@ def pesquisar_vaga(navegador_param):
                                 adicionar_mensagem(
                                     f"Aguardando o horário para iniciar a marcação do Proeis..."
                                 )
-                                janela.update()  # Atualiza a janela para exibir a mensagem
-                        # if check_input_and_time(input_field, hora_limite):
+                                janela_marcacao.update()  # Atualiza a janela para exibir a mensagem
+                        # if check_input_and_time(input_field, hora_marcacao):
                         if (
-                            hora_limite
-                            and check_input_and_time(input_field, hora_limite)
+                            hora_marcacao
+                            and check_input_and_time(input_field, hora_marcacao)
                         ) or (
-                            not hora_limite and check_input_and_time(input_field, None)
+                            not hora_marcacao
+                            and check_input_and_time(input_field, None)
                         ):
                             # Encontrar e clicar no botão de login
                             WebDriverWait(navegador_param, timeout).until(
@@ -318,7 +337,7 @@ def pesquisar_vaga(navegador_param):
                                 adicionar_mensagem(
                                     f"captcha digitado é inválido, digite novamente!"
                                 )
-                                janela.update()  # Atualiza a janela para exibir a mensagem
+                                janela_marcacao.update()  # Atualiza a janela para exibir a mensagem
                     except StaleElementReferenceException:
                         tentativa += 1
                         # Esperar por um curto período para evitar uso excessivo de CPU
@@ -354,9 +373,14 @@ def pesquisar_vaga(navegador_param):
         while True:
             xpath_evento = f"//td[text()='{informacao['setor_servico']}' and following-sibling::td[text()='{informacao['hora_servico']}'] and following-sibling::td[text()='{informacao['turno_servico']}']]/following-sibling::td[@class='btnCollumn']/a"
             try:
-                elementos_evento = WebDriverWait(navegador_param, 5).until(
-                    ec.element_to_be_clickable((By.XPATH, xpath_evento))
-                )
+                if informacao["tipo_filtro"] == 2:
+                    elementos_evento = WebDriverWait(navegador_param, 5).until(
+                        ec.element_to_be_clickable((By.XPATH, xpath_evento))
+                    )
+                else:
+                    elementos_evento = WebDriverWait(navegador_param, timeout).until(
+                        ec.element_to_be_clickable((By.XPATH, xpath_evento))
+                    )
 
                 # Verificar se o elemento é clicável e clicar nele
                 if elementos_evento.is_displayed() and elementos_evento.is_enabled():
@@ -367,25 +391,25 @@ def pesquisar_vaga(navegador_param):
                     adicionar_mensagem(
                         f"{informacao['setor_servico']} dia {informacao['data_servico'][8:10]}/{informacao['data_servico'][5:7]}/{informacao['data_servico'][0:4]} às {informacao['hora_servico']} marcado com sucesso!"
                     )
-                    janela.update()  # Atualiza a janela para exibir a mensagem
+                    janela_marcacao.update()  # Atualiza a janela para exibir a mensagem
                     break
                 else:
                     adicionar_mensagem(
                         f"{informacao['setor_servico']} dia {informacao['data_servico'][8:10]}/{informacao['data_servico'][5:7]}/{informacao['data_servico'][0:4]} às {informacao['hora_servico']} não encontrado!"
                     )
-                    janela.update()  # Atualiza a janela para exibir a mensagem
+                    janela_marcacao.update()  # Atualiza a janela para exibir a mensagem
                     break
             except TimeoutException:
                 tentativa += 1
                 if (
                     tentativa > 2
                     and next_item is not None
-                    and next_item != informacoes_array[-1]
+                    and next_item != dados_marcacao[-1]
                 ):
                     adicionar_mensagem(
                         f"Setor {informacao['setor_servico']} no dia {informacao['data_servico'][8:10]}/{informacao['data_servico'][5:7]}/{informacao['data_servico'][0:4]} às {informacao['hora_servico']} não encontrado! Buscando próxima vaga..."
                     )
-                    janela.update()  # Atualiza a janela para exibir a mensagem
+                    janela_marcacao.update()  # Atualiza a janela para exibir a mensagem
                     break
                 else:
                     continue
@@ -397,6 +421,82 @@ def pesquisar_vaga(navegador_param):
 
     # FECHA O NAVEGADOR AO TERMINAR DE INSERIR AS VAGAS
     adicionar_mensagem(f"Marcações finalizadas, fechando o navegador em 30 segundos...")
-    janela.update()  # Atualiza a janela para exibir a mensagem
+    janela_marcacao.update()  # Atualiza a janela para exibir a mensagem
     t.sleep(30)
     navegador_param.quit()
+
+
+def is_visible(navegador_param):
+    try:
+        erro_captcha = WebDriverWait(navegador_param, 0).until(
+            ec.presence_of_element_located((By.ID, "lblLogin"))
+        )
+        if erro_captcha.is_displayed():
+            return True
+        else:
+            return False
+    except TimeoutException:
+        return False
+
+
+def verifica_captcha_vaga_visivel(navegador_param):
+    try:
+        WebDriverWait(navegador_param, timeout).until(
+            ec.presence_of_element_located(
+                (
+                    By.XPATH,
+                    "//div[contains(@style, 'width: 300px; height: 91px; background: url')]",
+                )
+            )
+        )
+    except InvalidSelectorException:
+        return False
+
+    return True
+
+
+def is_alert(navegador_param, timeoutalert=1):
+    try:
+        alert = WebDriverWait(navegador_param, timeoutalert).until(
+            ec.alert_is_present()
+        )
+        if alert is not None:
+            alert.accept()
+            return 1
+    except Exception as err:
+        print(f"retrying after {type(err)}: {err}")
+
+    return 0
+
+
+def verifica_local_visivel(navegador_param):
+    try:
+        WebDriverWait(navegador_param, timeout).until(
+            ec.invisibility_of_element_located((By.ID, "aguarde"))
+        )
+    except TimeoutException:
+        return False
+    except NoSuchElementException:
+        return False
+    except InvalidSelectorException:
+        return False
+
+    return True
+
+
+def verifica_vaga_visivel(navegador_param):
+    try:
+        elemento = WebDriverWait(navegador_param, timeout).until(
+            ec.presence_of_element_located(
+                (By.CSS_SELECTOR, "div[role='status'][aria-hidden='true']")
+            )
+        )
+        style = elemento.get_attribute("style")
+        if "display:none" in style:
+            return False
+        else:
+            return True
+    except TimeoutException:
+        return False
+    except NoSuchElementException:
+        return False

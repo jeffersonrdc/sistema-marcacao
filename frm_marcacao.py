@@ -5,12 +5,11 @@ from tkinter import (
     Checkbutton,
     IntVar,
     Text,
-    Scrollbar,
     Button,
     messagebox,
 )
 from identificadores import *  # Supondo que essas variáveis sejam definidas em identificadores
-from datetime import datetime, date
+from datetime import date
 from dateutil.relativedelta import relativedelta, SU
 import pandas as pd
 from automacao import acessar_site
@@ -22,6 +21,7 @@ def validar_entrada(texto):
 
 
 class MarcacaoWindow:
+
     def __init__(self):
         # Inicializa a janela
         self.janela_marcacao = tk.Tk()
@@ -329,7 +329,7 @@ class MarcacaoWindow:
                     "tipo_login": tipo_login,
                     "usuario": usuario,
                     "senha": senha,
-                    "hora_limite": self.hora_limite,
+                    "hora_marcacao": self.hora_limite,
                 }
                 adicionar_mensagem(
                     self.text_area, f"Salvando os registros para marcações..."

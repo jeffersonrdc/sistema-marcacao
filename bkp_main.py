@@ -1479,11 +1479,4 @@ def login():
 
 
 if __name__ == "__main__":
-    abrir_janela()
-
-
-""" from frm_login import LoginWindow
-
-if __name__ == "__main__":
-    frm_login = LoginWindow()  # Inicia a janela principal
-    frm_login.start() """
+    """abrir_janela()"""

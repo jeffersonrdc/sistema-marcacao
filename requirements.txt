@@ -6,6 +6,7 @@ cffi==1.16.0
 charset-normalizer==3.3.2
 click==8.1.7
 colorama==0.4.6
+cryptography==43.0.3
 h11==0.14.0
 idna==3.7
 lxml==5.2.2
@@ -22,6 +23,7 @@ platformdirs==4.3.6
 pycparser==2.22
 pyinstaller==6.9.0
 pyinstaller-hooks-contrib==2024.7
+PyJWT==2.9.0
 PyQt5==5.15.10
 PyQt5-Qt5==5.15.2
 PyQt5-sip==12.13.0
