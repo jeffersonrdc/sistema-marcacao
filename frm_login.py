@@ -5,6 +5,13 @@ import tkinter as tk
 from tkinter import Toplevel, Label, Button, messagebox, ttk
 from frm_marcacao import MarcacaoWindow
 import threading
+from utils import criptografar, descriptografar
+from utils import (
+    mostrar_mensagem_centralizada,
+    mostrar_dialogo_carregamento,
+    fechar_dialogo_carregamento,
+)
+import identificadores
 
 
 class LoginWindow:
@@ -36,59 +43,15 @@ class LoginWindow:
         # Associa a tecla Enter ao botão de login
         self.janela_login.bind("<Return>", lambda event: self.fazer_login())
 
-    def mostrar_mensagem_centralizada(self, titulo, mensagem):
-        dialogo = Toplevel(self.janela_login)
-        dialogo.title(titulo)
-        dialogo.geometry("300x100")
-
-        largura_tela = dialogo.winfo_screenwidth()
-        altura_tela = dialogo.winfo_screenheight()
-        pos_x = (largura_tela - 300) // 2
-        pos_y = (altura_tela - 100) // 2
-        dialogo.geometry(f"300x100+{pos_x}+{pos_y}")
-
-        Label(dialogo, text=mensagem, wraplength=280, justify="center").pack(pady=10)
-        Button(dialogo, text="OK", command=dialogo.destroy).pack(pady=10)
-
-        dialogo.transient(self.janela_login)
-        dialogo.grab_set()
-        self.janela_login.wait_window(dialogo)
-
-    def mostrar_dialogo_carregamento(self, mensagem="Aguarde..."):
-        dialogo = Toplevel(self.janela_login)
-        dialogo.title("Carregando")
-        dialogo.geometry("200x100")
-
-        largura_tela = dialogo.winfo_screenwidth()
-        altura_tela = dialogo.winfo_screenheight()
-        pos_x = (largura_tela - 200) // 2
-        pos_y = (altura_tela - 100) // 2
-        dialogo.geometry(f"200x100+{pos_x}+{pos_y}")
-
-        Label(dialogo, text=mensagem).pack(pady=20)
-
-        # Adiciona uma barra de progresso
-        progress_bar = ttk.Progressbar(dialogo, mode="indeterminate", length=250)
-        progress_bar.pack(pady=10)
-        progress_bar.start()  # Inicia a animação da barra
-
-        dialogo.transient(self.janela_login)
-        dialogo.grab_set()
-        return dialogo, progress_bar
-
-    def fechar_dialogo_carregamento(self, dialogo, progress_bar):
-        progress_bar.stop()  # Para a animação da barra
-        dialogo.destroy()
-
     def validar_login(self, usuario, senha):
         url = "http://localhost:8000/login"
         response = requests.post(url, json={"usuario": usuario, "senha": senha})
 
         if response.status_code == 200:
-            token = response.json().get("token")
+            identificadores.token = response.json().get("token")            
             secret_key = os.getenv("SECRET_KEY")
             decoded_data = jwt.decode(
-                token, secret_key, algorithms=["HS256"], options={"verify_exp": False}
+                identificadores.token, secret_key, algorithms=["HS256"], options={"verify_exp": False}
             )
             return True
         return False
@@ -98,14 +61,16 @@ class LoginWindow:
         senha = self.entry_senha.get()
 
         if not usuario or not senha:
-            self.mostrar_mensagem_centralizada(
-                "Erro", "Por favor, preencha os campos de usuário e senha."
+            mostrar_mensagem_centralizada(
+                self.janela_login,
+                "Erro",
+                "Por favor, preencha os campos de usuário e senha.",
             )
             return
 
         # Mostrar o diálogo de carregamento
-        dialogo_carregamento, progress_bar = self.mostrar_dialogo_carregamento(
-            "Fazendo login..."
+        dialogo_carregamento, progress_bar = mostrar_dialogo_carregamento(
+            self.janela_login, "Fazendo login..."
         )
 
         # Função para processar o login
@@ -116,7 +81,7 @@ class LoginWindow:
                 # Fechar o diálogo na thread principal
                 self.janela_login.after(
                     0,
-                    self.fechar_dialogo_carregamento,
+                    fechar_dialogo_carregamento,
                     dialogo_carregamento,
                     progress_bar,
                 )
@@ -128,15 +93,15 @@ class LoginWindow:
                     # Mostrar mensagem de erro na thread principal
                     self.janela_login.after(
                         0,
-                        lambda: self.mostrar_mensagem_centralizada(
-                            "Erro", "Usuário ou senha incorretos."
+                        lambda: mostrar_mensagem_centralizada(
+                            self.janela_login, "Erro", "Usuário ou senha incorretos."
                         ),
                     )
             except requests.RequestException as e:
                 # Fechar o diálogo e mostrar erro na thread principal
                 self.janela_login.after(
                     0,
-                    self.fechar_dialogo_carregamento,
+                    fechar_dialogo_carregamento,
                     dialogo_carregamento,
                     progress_bar,
                 )

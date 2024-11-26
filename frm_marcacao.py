@@ -8,12 +8,22 @@ from tkinter import (
     Button,
     messagebox,
 )
-from identificadores import *  # Supondo que essas variáveis sejam definidas em identificadores
+import threading
+import os
+import requests
+
+""" from identificadores import * """  # Supondo que essas variáveis sejam definidas em identificadores
+import identificadores
 from datetime import date
 from dateutil.relativedelta import relativedelta, SU
 import pandas as pd
 from automacao import acessar_site
-from utils import adicionar_mensagem
+from utils import (
+    adicionar_mensagem,
+    mostrar_mensagem_centralizada,
+    mostrar_dialogo_carregamento,
+    fechar_dialogo_carregamento,
+)
 
 
 def validar_entrada(texto):
@@ -26,6 +36,15 @@ class MarcacaoWindow:
         # Inicializa a janela
         self.janela_marcacao = tk.Tk()
         self.janela_marcacao.title("Sistema de Marcação")
+
+        # Obtém a largura e altura da tela
+        screen_width = self.janela_marcacao.winfo_screenwidth()
+        screen_height = self.janela_marcacao.winfo_screenheight()
+
+        # Ajusta a geometria da janela para preencher toda a tela
+        self.janela_marcacao.geometry(f"{screen_width}x{screen_height}")        
+
+    def carregar_formulario(self):
 
         # Inicialização das variáveis
         self.convenio_vars = []
@@ -64,14 +83,14 @@ class MarcacaoWindow:
                     self.select_locais_cpa[index].config(state="disabled")
                     self.select_vagas_locais_cpa[index].config(state="disabled")
                     self.variable_cpa[index].set(
-                        OPTIONS_CPA[0]
+                        identificadores.OPTIONS_CPA[0]
                     )  # Reseta o OptionMenu de CPA
                 else:
                     self.checkbuttons_cpa[index].config(
                         state="normal"
                     )  # Ativa a checkbox de CPA
                     self.variable_convenio[index].set(
-                        OPTIONS_CONVENIO[0]
+                        identificadores.OPTIONS_CONVENIO[0]
                     )  # Reseta o OptionMenu de Convênio
                     self.select_convenio[index].config(state="disabled")
                     self.select_vagas_convenio[index].config(state="disabled")
@@ -87,7 +106,7 @@ class MarcacaoWindow:
                     self.select_cpa[index].config(state="normal")
                     self.select_vagas_locais_cpa[index].config(state="normal")
                     self.variable_convenio[index].set(
-                        OPTIONS_CONVENIO[0]
+                        identificadores.OPTIONS_CONVENIO[0]
                     )  # Reseta o OptionMenu de Convênio
                     self.variable_vagas_convenio[index].set(
                         "Selecione uma vaga"
@@ -97,14 +116,14 @@ class MarcacaoWindow:
                         state="normal"
                     )  # Ativa a checkbox de Convênio
                     self.variable_cpa[index].set(
-                        OPTIONS_CPA[0]
+                        identificadores.OPTIONS_CPA[0]
                     )  # Reseta o OptionMenu de CPA
                     self.select_cpa[index].config(state="disabled")
                     self.select_locais_cpa[index].config(state="disabled")
                     self.select_vagas_locais_cpa[index].config(state="disabled")
                     self.select_vagas_locais_cpa[index].config(state="disabled")
                     self.variable_convenio[index].set(
-                        OPTIONS_CONVENIO[0]
+                        identificadores.OPTIONS_CONVENIO[0]
                     )  # Reseta o OptionMenu de Convênio
                     self.variable_locais_cpa[index].set(
                         "Selecione o local"
@@ -114,7 +133,7 @@ class MarcacaoWindow:
                     )  # Reseta o OptionMenu de Convênio
 
         def update_locais_convenio(texto, index):
-            locais_options = OPTIONS_VAGASXCONVENIO.get(texto, [])
+            locais_options = identificadores.OPTIONS_VAGASXCONVENIO.get(texto, [])
             self.variable_vagas_convenio[index].set(
                 locais_options[0] if locais_options else "Selecione uma vaga"
             )
@@ -128,7 +147,7 @@ class MarcacaoWindow:
                 )
 
         def update_locais_cpa(texto, index):
-            locais_options = OPTIONS_LOCAISXCPA.get(texto, [])
+            locais_options = identificadores.OPTIONS_LOCAISXCPA.get(texto, [])
             self.variable_locais_cpa[index].set(
                 locais_options[0] if locais_options else "Selecione um local"
             )
@@ -151,7 +170,7 @@ class MarcacaoWindow:
                 self.select_locais_cpa[index].config(state="disabled")
 
         def update_vagas_locais_cpa(texto, index):
-            vagas_options = OPTIONS_VAGASXLOCAIS_CPA.get(texto, [])
+            vagas_options = identificadores.OPTIONS_VAGASXLOCAIS_CPA.get(texto, [])
             self.variable_vaga_servico[index].set(
                 vagas_options[0] if vagas_options else "Selecione um local"
             )
@@ -193,7 +212,7 @@ class MarcacaoWindow:
         def validar_campos():
             global usuario, senha, tipo_login
 
-            tipo_login = OPTIONS_IDENTIFICACAO.index(tipo_identificacao.get())
+            tipo_login = identificadores.OPTIONS_IDENTIFICACAO.index(tipo_identificacao.get())
             if tipo_login == 0:
                 messagebox.showerror("Erro", "Informe o tipo de login")
                 return False
@@ -215,7 +234,7 @@ class MarcacaoWindow:
                 return False
 
             if (
-                OPTIONS_IDENTIFICACAO.index(tipo_identificacao.get()) == 1
+                identificadores.OPTIONS_IDENTIFICACAO.index(tipo_identificacao.get()) == 1
                 and len(usuario) != 11
             ):
                 messagebox.showerror(
@@ -231,17 +250,17 @@ class MarcacaoWindow:
             is_servico_selecionado = False
             for i in range(7):
                 data_servico = data.index(self.variable_data_servico[i].get())
-                horario_servico = OPTIONS_HORARIO.index(
+                horario_servico = identificadores.OPTIONS_HORARIO.index(
                     self.variable_horario_servico[i].get()
                 )
-                turno_servico = OPTIONS_TURNOSERVICO.index(
+                turno_servico = identificadores.OPTIONS_TURNOSERVICO.index(
                     self.variable_turno_servico[i].get()
                 )
                 if self.convenio_vars[i].get():
-                    indice_convenio = OPTIONS_CONVENIO.index(
+                    indice_convenio = identificadores.OPTIONS_CONVENIO.index(
                         self.variable_convenio[i].get()
                     )
-                    convenio = OPTIONS_VAGASXCONVENIO[self.variable_convenio[i].get()]
+                    convenio = identificadores.OPTIONS_VAGASXCONVENIO[self.variable_convenio[i].get()]
                     vaga_convenio = convenio.index(
                         self.variable_vagas_convenio[i].get()
                     )
@@ -272,17 +291,17 @@ class MarcacaoWindow:
                         return False
                     is_servico_selecionado = True
                 elif self.cpa_vars[i].get():
-                    cpa = OPTIONS_CPA.index(self.variable_cpa[i].get())
+                    cpa = identificadores.OPTIONS_CPA.index(self.variable_cpa[i].get())
                     if cpa == 0:
                         messagebox.showerror(
                             "Erro", f"CPA da linha {i + 1} não informado"
                         )
                         return False
-                    locais_cpa = OPTIONS_LOCAISXCPA[self.variable_cpa[i].get()]
+                    locais_cpa = identificadores.OPTIONS_LOCAISXCPA[self.variable_cpa[i].get()]
                     indice_local_selecionado = locais_cpa.index(
                         self.variable_locais_cpa[i].get()
                     )
-                    local_selecionado = OPTIONS_VAGASXLOCAIS_CPA[
+                    local_selecionado = identificadores.OPTIONS_VAGASXLOCAIS_CPA[
                         self.variable_locais_cpa[i].get()
                     ]
                     vaga_servico = local_selecionado.index(
@@ -382,25 +401,18 @@ class MarcacaoWindow:
                     info_marcacao, info_usuario, self.text_area, self.janela_marcacao
                 )
 
-        # Obtém a largura e altura da tela
-        screen_width = self.janela_marcacao.winfo_screenwidth()
-        screen_height = self.janela_marcacao.winfo_screenheight()
-
-        # Ajusta a geometria da janela para preencher toda a tela
-        self.janela_marcacao.geometry(f"{screen_width}x{screen_height}")
-
         # Variáveis para a criação dos componentes
         row = 0
         column = 0
 
         # OptionMenu para tipo de identificação
         tipo_identificacao = StringVar()
-        tipo_identificacao.set(OPTIONS_IDENTIFICACAO[0])  # Valor padrão
+        tipo_identificacao.set(identificadores.OPTIONS_IDENTIFICACAO[0])  # Valor padrão
         tk.Label(self.janela_marcacao, text="Tipo de Login:").grid(
             column=4, row=row, padx=5, pady=5, sticky="w"
         )
         option_identificacao = OptionMenu(
-            self.janela_marcacao, tipo_identificacao, *OPTIONS_IDENTIFICACAO
+            self.janela_marcacao, tipo_identificacao, *identificadores.OPTIONS_IDENTIFICACAO
         )
         option_identificacao.grid(column=5, row=row, padx=5, pady=5)
         option_identificacao.config(width=20)
@@ -435,13 +447,13 @@ class MarcacaoWindow:
             column=4, row=row, padx=5, pady=5, sticky="w"
         )
         variable_horariomarcacao = StringVar(self.janela_marcacao)
-        variable_horariomarcacao.set(OPTIONS_HORAMARCACAO[0])
+        variable_horariomarcacao.set(identificadores.OPTIONS_HORAMARCACAO[0])
 
         # OptionMenu para horário de marcação
         w_horariomarcacao = OptionMenu(
             self.janela_marcacao,
             variable_horariomarcacao,
-            *OPTIONS_HORAMARCACAO,
+            *identificadores.OPTIONS_HORAMARCACAO,
             command=update_hora_limite,
         )
         w_horariomarcacao.grid(column=5, row=row, padx=5, pady=5)
@@ -467,11 +479,11 @@ class MarcacaoWindow:
             column += 1
 
             self.variable_convenio.append(StringVar(self.janela_marcacao))
-            self.variable_convenio[i].set(OPTIONS_CONVENIO[0])
+            self.variable_convenio[i].set(identificadores.OPTIONS_CONVENIO[0])
             w_convenio = OptionMenu(
                 self.janela_marcacao,
                 self.variable_convenio[i],
-                *OPTIONS_CONVENIO,
+                *identificadores.OPTIONS_CONVENIO,
                 command=lambda value, idx=i: update_locais_convenio(value, idx),
             )
             w_convenio.config(state="disabled")
@@ -505,11 +517,11 @@ class MarcacaoWindow:
             column += 1
 
             self.variable_cpa.append(StringVar(self.janela_marcacao))
-            self.variable_cpa[i].set(OPTIONS_CPA[0])
+            self.variable_cpa[i].set(identificadores.OPTIONS_CPA[0])
             w_cpa = OptionMenu(
                 self.janela_marcacao,
                 self.variable_cpa[i],
-                *OPTIONS_CPA,
+                *identificadores.OPTIONS_CPA,
                 command=lambda value, idx=i: update_locais_cpa(value, idx),
             )
             w_cpa.config(state="disabled")
@@ -534,7 +546,7 @@ class MarcacaoWindow:
             w_vaga = OptionMenu(
                 self.janela_marcacao,
                 self.variable_vaga_servico[i],
-                *OPTIONS_VAGASXLOCAIS_CPA,
+                *identificadores.OPTIONS_VAGASXLOCAIS_CPA,
             )
             w_vaga.config(state="disabled")
             w_vaga.grid(column=column, row=row, padx=5, pady=5)
@@ -552,20 +564,20 @@ class MarcacaoWindow:
             column += 1
 
             self.variable_horario_servico.append(StringVar(self.janela_marcacao))
-            self.variable_horario_servico[i].set(OPTIONS_HORARIO[0])
+            self.variable_horario_servico[i].set(identificadores.OPTIONS_HORARIO[0])
             w_horario = OptionMenu(
-                self.janela_marcacao, self.variable_horario_servico[i], *OPTIONS_HORARIO
+                self.janela_marcacao, self.variable_horario_servico[i], *identificadores.OPTIONS_HORARIO
             )
             w_horario.grid(column=column, row=row, padx=5, pady=5)
 
             column += 1
 
             self.variable_turno_servico.append(StringVar(self.janela_marcacao))
-            self.variable_turno_servico[i].set(OPTIONS_TURNOSERVICO[0])
+            self.variable_turno_servico[i].set(identificadores.OPTIONS_TURNOSERVICO[0])
             w_turnoservico = OptionMenu(
                 self.janela_marcacao,
                 self.variable_turno_servico[i],
-                *OPTIONS_TURNOSERVICO,
+                *identificadores.OPTIONS_TURNOSERVICO,
             )
             w_turnoservico.grid(column=column, row=row, padx=5, pady=5)
 
@@ -586,5 +598,74 @@ class MarcacaoWindow:
             row=row, column=0, padx=10, pady=10, sticky="nsew", columnspan=11
         )
 
+        # Inicia o loop da interface gráfica
+        self.janela_marcacao.mainloop()
+
+    def carregar_identificadores(self):
+        url = "http://localhost:8000/retornaIdentificadores"
+
+        # Adiciona o token Bearer no cabeçalho da requisição
+        headers = {"Authorization": f"Bearer {identificadores.token}"}
+
+        response = requests.get(url, headers=headers)
+
+        if response.status_code == 200:
+            # Decodifica o JSON da resposta
+            data = response.json()
+
+            # Verifica se o retorno é um array esperado e atribui à variável
+            if isinstance(data, list):  # Certifica-se de que o retorno é uma lista
+                identificadores.OPTIONS_CONVENIO = [item["NM_Convenio"] for item in data]
+                print("Dados carregados com sucesso!")
+                return True
+            else:
+                print("Erro: O retorno da API não é um array.")
+                return False
+        return False
+
     def start(self):
+        # Mostrar o diálogo de carregamento
+        dialogo_carregamento, progress_bar = mostrar_dialogo_carregamento(
+            self.janela_marcacao, "Carregando dados..."
+        )
+
+        def processar_carregamento():
+            try:
+                sucesso = self.carregar_identificadores()
+
+                # Fechar o diálogo na thread principal
+                self.janela_marcacao.after(
+                    0,
+                    fechar_dialogo_carregamento,
+                    dialogo_carregamento,
+                    progress_bar,
+                )
+
+                if sucesso:
+                    # Navegar para a próxima janela na thread principal
+                    self.janela_marcacao.after(0, self.carregar_formulario)
+                else:
+                    # Mostrar mensagem de erro na thread principal
+                    self.janela_marcacao.after(
+                        0,
+                        lambda: mostrar_mensagem_centralizada(
+                            self.janela_marcacao, "Erro", "Falha ao carregar os dados!"
+                        ),
+                    )
+            except requests.RequestException as e:
+                # Fechar o diálogo e mostrar erro na thread principal
+                self.janela_marcacao.after(
+                    0,
+                    fechar_dialogo_carregamento,
+                    dialogo_carregamento,
+                    progress_bar,
+                )
+                self.janela_marcacao.after(
+                    0,
+                    lambda: messagebox.showerror("Erro", f"Erro de conexão: {e}"),
+                )
+
+        # Inicia o processamento do login em uma thread separada
+        threading.Thread(target=processar_carregamento, daemon=True).start()
+
         self.janela_marcacao.mainloop()

@@ -320,7 +320,7 @@ def pesquisar_vaga(navegador_param):
         is_ok = False
         while not is_ok:
             try:
-                # print(navegador.page_source)
+                # print(navegador_param.page_source)
                 # Garante que o elemento seja visível e clicável
                 input_field = WebDriverWait(navegador_param, timeout).until(
                     ec.visibility_of_element_located(

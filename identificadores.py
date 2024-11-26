@@ -1,6 +1,5 @@
-chave_api = '15c6017e98f71b19d6b7f16932ff4aaa'
-# login = '51040425'
-# senha = '11fac@D'
+chave_api = "15c6017e98f71b19d6b7f16932ff4aaa"
+token = ""
 
 # Opções para o tipo de identificação
 OPTIONS_IDENTIFICACAO = ["Selecione uma opção", "CPF", "ID FUNCIONAL"]
@@ -205,11 +204,11 @@ OPTIONS_CONVENIO = [
     "SUPERVIA",
     "UNIVERSIDADE DO ESTADO DO NORTE FLUMINENSE",
     "UPPMERJ - RAS",
-    "VIA RIO"
+    "VIA RIO",
 ]
 
 OPTIONS_VAGASXCONVENIO = {
-    "25 BPM - RAS":  [
+    "25 BPM - RAS": [
         "Selecione uma vaga",
         "CABO FRIO. POLICIAMENTO PREVENTIVO SOBRE MANCHA CRIMINAL",
         "SAQUAREMA. POLICIAMENTO PREVENTIVO SOBRE MANCHA CRIMINAL",
@@ -222,37 +221,33 @@ OPTIONS_VAGASXCONVENIO = {
         "QUADRICICLO SAQUAREMA",
         "CNH A OBRIGATÓRIO POLICIAMENTO MANCHA CRIMINAL BUZIOS",
         "CNH A OBRIGATÓRIO POLICIAMENTO MANCHA CRIMINAL SAQUAREMA",
-        "IGUABA GRANDE. PATRULHAMENTO"
+        "IGUABA GRANDE. PATRULHAMENTO",
     ],
     "PREFEITURA DE MARICÁ": [
-                        'Selecione uma vaga',
-                        "CERCO INTELIGENTE",
-                        "MÓDULO CALABOCA",
-                        "MÓDULO DE SEGURANÇA UBATIBA",
-                        "MÓDULO DO CAJU",
-                        "PATRULHAMENTO MARICA",
-                        "SETOR CENTRO",
-                        "PATRULHAMENTO MARICA",
-                        "PB ACESSO AO MCMV INOÃ",
-                        "SETOR ITAIPUAÇU",
-                        "SETOR PONTA NEGRA",
-                        "SETOR SÃO JOSÉ DO IMBASSAÍ",
-                        "SETOR INOÃ",
-                        "SETOR UBATIBA",
-                        "MÓDULO DE SEGURANÇA SÃO JOSÉ",
-                        "SETOR BAMBUÍ",
-                        "SETOR ITAIPUAÇU ITAOCAIA"
-                    ],
+        "Selecione uma vaga",
+        "CERCO INTELIGENTE",
+        "MÓDULO CALABOCA",
+        "MÓDULO DE SEGURANÇA UBATIBA",
+        "MÓDULO DO CAJU",
+        "PATRULHAMENTO MARICA",
+        "SETOR CENTRO",
+        "PB ACESSO AO MCMV INOÃ",
+        "SETOR ITAIPUAÇU",
+        "SETOR PONTA NEGRA",
+        "SETOR SÃO JOSÉ DO IMBASSAÍ",
+        "SETOR INOÃ",
+        "SETOR UBATIBA",
+        "MÓDULO DE SEGURANÇA SÃO JOSÉ",
+        "SETOR BAMBUÍ",
+        "SETOR ITAIPUAÇU ITAOCAIA",
+    ],
     "MUNICIPIO DE NITEROI": [
-                'Selecione uma vaga',
-                "APOIO A INTERVENCAO URBANISTICA DA PRE. DE NITEROI",
-                "NITEROI MAIS SEGURA",
-                "BARCAS SA  E TERMINAL"
-            ],
-    "IMPRENSA OFICIAL RJ": [
-                'Selecione uma vaga',
-                'IMPRENSA OFICIAL SEDE'
-            ],
+        "Selecione uma vaga",
+        "APOIO A INTERVENCAO URBANISTICA DA PRE. DE NITEROI",
+        "NITEROI MAIS SEGURA",
+        "BARCAS SA  E TERMINAL",
+    ],
+    "IMPRENSA OFICIAL RJ": ["Selecione uma vaga", "IMPRENSA OFICIAL SEDE"],
 }
 
 OPTIONS_CPA = [
@@ -295,111 +290,97 @@ OPTIONS_CPA = [
     "6º BPM - 1º CPA",
     "7º BPM - 4º CPA",
     "8º BPM - 6º CPA",
-    "9º BPM - 2º CPA"
+    "9º BPM - 2º CPA",
 ]
 
 OPTIONS_LOCAISXCPA = {
     "12º BPM - 4º CPA": [
-        'Selecione o local',
-        'MUNICIPIO DE NITEROI',
-        'IMPRENSA OFICIAL RJ',
-        'SEGURANÇA PRESENTE',
-        'PREFEITURA DE MARICÁ'
+        "Selecione o local",
+        "MUNICIPIO DE NITEROI",
+        "IMPRENSA OFICIAL RJ",
+        "SEGURANÇA PRESENTE",
+        "PREFEITURA DE MARICÁ",
     ],
     "25º BPM - 4º CPA": [
-        'Selecione o local',
-        '25 BPM - RAS',
-        'PREFEITURA DE BUZIOS',
-        'PREFEITURA DE SAQUAREMA',
-        'MUNICIPIO DE ARRAIAL DO CABO',
-        'MUNICÍPIO DE ARARUAMA',
-        'PREFEITURA DE CABO FRIO',
-        'MUNICÍPIO DE IGUABA GRANDE'
-    ]
+        "Selecione o local",
+        "25 BPM - RAS",
+        "PREFEITURA DE BUZIOS",
+        "PREFEITURA DE SAQUAREMA",
+        "MUNICIPIO DE ARRAIAL DO CABO",
+        "MUNICÍPIO DE ARARUAMA",
+        "PREFEITURA DE CABO FRIO",
+        "MUNICÍPIO DE IGUABA GRANDE",
+    ],
 }
 
 OPTIONS_VAGASXLOCAIS_CPA = {
     "MUNICIPIO DE NITEROI": [
-            'Selecione uma vaga',
-            "APOIO A INTERVENCAO URBANISTICA DA PRE. DE NITEROI",
-            "NITEROI MAIS SEGURA",
-            "BARCAS SA  E TERMINAL"
-        ],
-    "IMPRENSA OFICIAL RJ": [
-                'Selecione uma vaga',
-                'IMPRENSA OFICIAL SEDE'
-            ],
+        "Selecione uma vaga",
+        "APOIO A INTERVENCAO URBANISTICA DA PRE. DE NITEROI",
+        "NITEROI MAIS SEGURA",
+        "BARCAS SA  E TERMINAL",
+    ],
+    "IMPRENSA OFICIAL RJ": ["Selecione uma vaga", "IMPRENSA OFICIAL SEDE"],
     "SEGURANÇA PRESENTE": [
-                    'Selecione uma vaga',
-                    "NITEROI PRESENTE ICARAI POG",
-                    "NITEROI PRESENTE CENTRO POG",
-                    "NITEROI PRESENTE REGIAO OCEANICA POG"
-                ],
+        "Selecione uma vaga",
+        "NITEROI PRESENTE ICARAI POG",
+        "NITEROI PRESENTE CENTRO POG",
+        "NITEROI PRESENTE REGIAO OCEANICA POG",
+    ],
     "PREFEITURA DE MARICÁ": [
-                        'Selecione uma vaga',
-                        "CERCO INTELIGENTE",
-                        "MÓDULO CALABOCA",
-                        "MÓDULO DE SEGURANÇA UBATIBA",
-                        "MÓDULO DO CAJU",
-                        "PATRULHAMENTO MARICA",
-                        "SETOR CENTRO",
-                        "PATRULHAMENTO MARICA",
-                        "PB ACESSO AO MCMV INOÃ",
-                        "SETOR ITAIPUAÇU",
-                        "SETOR PONTA NEGRA",
-                        "SETOR SÃO JOSÉ DO IMBASSAÍ",
-                        "SETOR INOÃ",
-                        "SETOR UBATIBA",
-                        "MÓDULO DE SEGURANÇA SÃO JOSÉ",
-                        "SETOR BAMBUÍ",
-                        "SETOR ITAIPUAÇU ITAOCAIA"
-                    ],
+        "Selecione uma vaga",
+        "CERCO INTELIGENTE",
+        "MÓDULO CALABOCA",
+        "MÓDULO DE SEGURANÇA UBATIBA",
+        "MÓDULO DO CAJU",
+        "PATRULHAMENTO MARICA",
+        "SETOR CENTRO",
+        "PATRULHAMENTO MARICA",
+        "PB ACESSO AO MCMV INOÃ",
+        "SETOR ITAIPUAÇU",
+        "SETOR PONTA NEGRA",
+        "SETOR SÃO JOSÉ DO IMBASSAÍ",
+        "SETOR INOÃ",
+        "SETOR UBATIBA",
+        "MÓDULO DE SEGURANÇA SÃO JOSÉ",
+        "SETOR BAMBUÍ",
+        "SETOR ITAIPUAÇU ITAOCAIA",
+    ],
     "25 BPM - RAS": [
-                        'Selecione uma vaga',
-                    ],
+        "Selecione uma vaga",
+    ],
     "PREFEITURA DE BUZIOS": [
-                        'Selecione uma vaga',
-                        'UMA BUZIOS MAIS SEGURA',
-                    ],
+        "Selecione uma vaga",
+        "UMA BUZIOS MAIS SEGURA",
+    ],
     "PREFEITURA DE SAQUAREMA": [
-                        'Selecione uma vaga',
-                        'MÓDULO JACAREPIÁ',
-                        'MÓDULO TREVO LATINO MELO',
-                        'VTR DE APOIO AO MODULO JACAREPIA',
-                        'SAQUAREMA MAIS SEGURA III',
-                        'MÓDULO TREVO VILATUR',
-                    ],
+        "Selecione uma vaga",
+        "MÓDULO JACAREPIÁ",
+        "MÓDULO TREVO LATINO MELO",
+        "VTR DE APOIO AO MODULO JACAREPIA",
+        "SAQUAREMA MAIS SEGURA III",
+        "MÓDULO TREVO VILATUR",
+    ],
     "MUNICIPIO DE ARRAIAL DO CABO": [
-                        'Selecione uma vaga',
-                        'POLICIAMENTO',
-                    ],
+        "Selecione uma vaga",
+        "POLICIAMENTO",
+    ],
     "MUNICÍPIO DE ARARUAMA": [
-                        'Selecione uma vaga',
-                    ],
+        "Selecione uma vaga",
+    ],
     "PREFEITURA DE CABO FRIO": [
-                        'Selecione uma vaga',
-                        'CABO FRIO LUGAR PARA TODOS NÓS NOTURNO',
-                    ],
+        "Selecione uma vaga",
+        "CABO FRIO LUGAR PARA TODOS NÓS NOTURNO",
+    ],
     "MUNICÍPIO DE IGUABA GRANDE": [
-                        'Selecione uma vaga',
-                        'PATRULHAMENTO  DIA E NOITE',
-                    ]
+        "Selecione uma vaga",
+        "PATRULHAMENTO  DIA E NOITE",
+    ],
 }
 
-OPTIONS_HORAMARCACAO = [
-    "Selecione o horário",
-    "06:00:00",
-    "06:30:00",
-    "07:00:00"
-]
+OPTIONS_HORAMARCACAO = ["Selecione o horário", "06:00:00", "06:30:00", "07:00:00"]
 
-OPTIONS_TURNOSERVICO = [
-    "Selecione o turno de serviço",
-    "6 h",
-    "8 h",
-    "12 h",
-    "24 h"
-]
+OPTIONS_TURNOSERVICO = ["Selecione o turno de serviço", "6 h", "8 h", "12 h", "24 h"]
 
 OPTIONS_HORARIO = [
     "Selecione o horário de serviço",
@@ -449,5 +430,5 @@ OPTIONS_HORARIO = [
     "22:30:00",
     "23:00:00",
     "23:30:00",
-    "00:00:00"
+    "00:00:00",
 ]
