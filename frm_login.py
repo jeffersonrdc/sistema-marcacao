@@ -48,10 +48,13 @@ class LoginWindow:
         response = requests.post(url, json={"usuario": usuario, "senha": senha})
 
         if response.status_code == 200:
-            identificadores.token = response.json().get("token")            
+            identificadores.token = response.json().get("token")
             secret_key = os.getenv("SECRET_KEY")
             decoded_data = jwt.decode(
-                identificadores.token, secret_key, algorithms=["HS256"], options={"verify_exp": False}
+                identificadores.token,
+                secret_key,
+                algorithms=["HS256"],
+                options={"verify_exp": False},
             )
             return True
         return False

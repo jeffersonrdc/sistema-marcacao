@@ -460,17 +460,14 @@ def pesquisar_vaga(navegador_param):
                     )
                     janela.update()  # Atualiza a janela para exibir a mensagem
                     break
-            except TimeoutException:
-                tentativa += 1
-                if (
-                    tentativa > 2
-                    and next_item is not None
-                    and next_item != informacoes_array[-1]
-                ):
+            except TimeoutException:                
+                if (tentativa < 2):
+                    tentativa += 1
                     adicionar_mensagem(
-                        f"Setor {informacao['setor_servico']} no dia {informacao['data_servico'][8:10]}/{informacao['data_servico'][5:7]}/{informacao['data_servico'][0:4]} às {informacao['hora_servico']} não encontrado! Buscando próxima vaga..."
+                        f"Setor {informacao['setor_servico']} no dia {informacao['data_servico'][8:10]}/{informacao['data_servico'][5:7]}/{informacao['data_servico'][0:4]} às {informacao['hora_servico']} NÃO ENCONTRADO! Buscando próxima vaga em 5 segundos..."
                     )
                     janela.update()  # Atualiza a janela para exibir a mensagem
+                    t.sleep(5)
                     break
                 else:
                     continue

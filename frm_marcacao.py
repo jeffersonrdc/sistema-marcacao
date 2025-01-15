@@ -42,7 +42,7 @@ class MarcacaoWindow:
         screen_height = self.janela_marcacao.winfo_screenheight()
 
         # Ajusta a geometria da janela para preencher toda a tela
-        self.janela_marcacao.geometry(f"{screen_width}x{screen_height}")        
+        self.janela_marcacao.geometry(f"{screen_width}x{screen_height}")
 
     def carregar_formulario(self):
 
@@ -212,7 +212,9 @@ class MarcacaoWindow:
         def validar_campos():
             global usuario, senha, tipo_login
 
-            tipo_login = identificadores.OPTIONS_IDENTIFICACAO.index(tipo_identificacao.get())
+            tipo_login = identificadores.OPTIONS_IDENTIFICACAO.index(
+                tipo_identificacao.get()
+            )
             if tipo_login == 0:
                 messagebox.showerror("Erro", "Informe o tipo de login")
                 return False
@@ -234,7 +236,8 @@ class MarcacaoWindow:
                 return False
 
             if (
-                identificadores.OPTIONS_IDENTIFICACAO.index(tipo_identificacao.get()) == 1
+                identificadores.OPTIONS_IDENTIFICACAO.index(tipo_identificacao.get())
+                == 1
                 and len(usuario) != 11
             ):
                 messagebox.showerror(
@@ -260,7 +263,9 @@ class MarcacaoWindow:
                     indice_convenio = identificadores.OPTIONS_CONVENIO.index(
                         self.variable_convenio[i].get()
                     )
-                    convenio = identificadores.OPTIONS_VAGASXCONVENIO[self.variable_convenio[i].get()]
+                    convenio = identificadores.OPTIONS_VAGASXCONVENIO[
+                        self.variable_convenio[i].get()
+                    ]
                     vaga_convenio = convenio.index(
                         self.variable_vagas_convenio[i].get()
                     )
@@ -297,7 +302,9 @@ class MarcacaoWindow:
                             "Erro", f"CPA da linha {i + 1} não informado"
                         )
                         return False
-                    locais_cpa = identificadores.OPTIONS_LOCAISXCPA[self.variable_cpa[i].get()]
+                    locais_cpa = identificadores.OPTIONS_LOCAISXCPA[
+                        self.variable_cpa[i].get()
+                    ]
                     indice_local_selecionado = locais_cpa.index(
                         self.variable_locais_cpa[i].get()
                     )
@@ -412,7 +419,9 @@ class MarcacaoWindow:
             column=4, row=row, padx=5, pady=5, sticky="w"
         )
         option_identificacao = OptionMenu(
-            self.janela_marcacao, tipo_identificacao, *identificadores.OPTIONS_IDENTIFICACAO
+            self.janela_marcacao,
+            tipo_identificacao,
+            *identificadores.OPTIONS_IDENTIFICACAO,
         )
         option_identificacao.grid(column=5, row=row, padx=5, pady=5)
         option_identificacao.config(width=20)
@@ -566,7 +575,9 @@ class MarcacaoWindow:
             self.variable_horario_servico.append(StringVar(self.janela_marcacao))
             self.variable_horario_servico[i].set(identificadores.OPTIONS_HORARIO[0])
             w_horario = OptionMenu(
-                self.janela_marcacao, self.variable_horario_servico[i], *identificadores.OPTIONS_HORARIO
+                self.janela_marcacao,
+                self.variable_horario_servico[i],
+                *identificadores.OPTIONS_HORARIO,
             )
             w_horario.grid(column=column, row=row, padx=5, pady=5)
 
@@ -615,7 +626,9 @@ class MarcacaoWindow:
 
             # Verifica se o retorno é um array esperado e atribui à variável
             if isinstance(data, list):  # Certifica-se de que o retorno é uma lista
-                identificadores.OPTIONS_CONVENIO = [item["NM_Convenio"] for item in data]
+                identificadores.OPTIONS_CONVENIO = [
+                    item["NM_Convenio"] for item in data
+                ]
                 print("Dados carregados com sucesso!")
                 return True
             else:
