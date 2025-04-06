@@ -6,6 +6,16 @@ OPTIONS_IDENTIFICACAO = ["Selecione uma opção", "CPF", "ID FUNCIONAL"]
 
 OPTIONS_CONVENIO = [
     "Selecione um Convênio",
+    "12 BPM - RAS",
+    "25 BPM - RAS",
+    "MUNICÍPIO DE ARARUAMA",
+    "MUNICÍPIO DE IGUABA GRANDE",
+    "MUNICIPIO DE NITEROI",
+    "PREFEITURA DE MARICÁ",
+    "PREFEITURA DE SAQUAREMA",
+]
+""" OPTIONS_CONVENIO = [
+    "Selecione um Convênio",
     "01 CIPM - RAS",
     "01 CPA - RAS",
     "01 DPJM - RAS",
@@ -206,7 +216,7 @@ OPTIONS_CONVENIO = [
     "UPPMERJ - RAS",
     "VIA RIO",
 ]
-
+ """
 OPTIONS_VAGASXCONVENIO = {
     "25 BPM - RAS": [
         "Selecione uma vaga",
@@ -215,7 +225,7 @@ OPTIONS_VAGASXCONVENIO = {
         "A. BUZIOS. POLICIAMENTO PREVENTIVO SOBRE MANCHA CRIMINAL",
         "ARRAIAL DO CABO. PATRULHAMENTO",
         "CNH A OBRIGATÓRIO POLICIAMENTO MANCHA CRIMINAL CABO FRIO MOTOS",
-        "ARARUAMA. POLICIAMENTO PREVENTIVO SOBRE MANCHA CRIMINAL",
+        "ARARUAMA.  POLICIAMENTO PREVENTIVO SOBRE MANCHA CRIMINAL",
         "QUADRICICLO BUZIOS",
         "UNAMAR. POLICIAMENTO PREVENTIVO MANCHA CRIMINAL",
         "QUADRICICLO SAQUAREMA",
@@ -229,15 +239,16 @@ OPTIONS_VAGASXCONVENIO = {
         "MÓDULO CALABOCA",
         "MÓDULO DE SEGURANÇA UBATIBA",
         "MÓDULO DO CAJU",
+        "MÓDULO DE SEGURANÇA CAJUEIRO",
+        "MÓDULO DE SEGURANÇA SÃO JOSÉ",
         "PATRULHAMENTO MARICA",
-        "SETOR CENTRO",
         "PB ACESSO AO MCMV INOÃ",
+        "SETOR CENTRO",
         "SETOR ITAIPUAÇU",
         "SETOR PONTA NEGRA",
         "SETOR SÃO JOSÉ DO IMBASSAÍ",
         "SETOR INOÃ",
         "SETOR UBATIBA",
-        "MÓDULO DE SEGURANÇA SÃO JOSÉ",
         "SETOR BAMBUÍ",
         "SETOR ITAIPUAÇU ITAOCAIA",
     ],
@@ -248,9 +259,31 @@ OPTIONS_VAGASXCONVENIO = {
         "BARCAS SA  E TERMINAL",
     ],
     "IMPRENSA OFICIAL RJ": ["Selecione uma vaga", "IMPRENSA OFICIAL SEDE"],
+    "MUNICÍPIO DE ARARUAMA": [
+        "Selecione uma vaga",
+        "PATRULHAMENTO ARARUAMA MAIS SEGURA",
+    ],
+    "MUNICÍPIO DE IGUABA GRANDE": [
+        "Selecione uma vaga",
+        "PATRULHAMENTO  DIA E NOITE",
+    ],
+    "PREFEITURA DE SAQUAREMA": [
+        "Selecione uma vaga",
+        "MÓDULO JACAREPIÁ",
+        "MÓDULO TREVO LATINO MELO",
+        "VTR DE APOIO AO MODULO JACAREPIA",
+        "SAQUAREMA MAIS SEGURA III",
+        "MÓDULO TREVO VILATUR",
+        "DEPÓSITO MAIS SEGURO",
+    ],
 }
 
 OPTIONS_CPA = [
+    "Selecione um Cpa",
+    "12º BPM - 4º CPA",
+    "25º BPM - 4º CPA",
+]
+""" OPTIONS_CPA = [
     "Selecione um Cpa",
     "10º BPM - 5º CPA",
     "11º BPM - 7º CPA",
@@ -292,6 +325,7 @@ OPTIONS_CPA = [
     "8º BPM - 6º CPA",
     "9º BPM - 2º CPA",
 ]
+ """
 
 OPTIONS_LOCAISXCPA = {
     "12º BPM - 4º CPA": [
@@ -333,16 +367,16 @@ OPTIONS_VAGASXLOCAIS_CPA = {
         "MÓDULO CALABOCA",
         "MÓDULO DE SEGURANÇA UBATIBA",
         "MÓDULO DO CAJU",
-        "PATRULHAMENTO MARICA",
-        "SETOR CENTRO",
+        "MÓDULO DE SEGURANÇA CAJUEIRO",
+        "MÓDULO DE SEGURANÇA SÃO JOSÉ",
         "PATRULHAMENTO MARICA",
         "PB ACESSO AO MCMV INOÃ",
+        "SETOR CENTRO",
         "SETOR ITAIPUAÇU",
         "SETOR PONTA NEGRA",
         "SETOR SÃO JOSÉ DO IMBASSAÍ",
         "SETOR INOÃ",
         "SETOR UBATIBA",
-        "MÓDULO DE SEGURANÇA SÃO JOSÉ",
         "SETOR BAMBUÍ",
         "SETOR ITAIPUAÇU ITAOCAIA",
     ],
@@ -355,11 +389,12 @@ OPTIONS_VAGASXLOCAIS_CPA = {
     ],
     "PREFEITURA DE SAQUAREMA": [
         "Selecione uma vaga",
+        "DEPÓSITO MAIS SEGURO",
         "MÓDULO JACAREPIÁ",
         "MÓDULO TREVO LATINO MELO",
-        "VTR DE APOIO AO MODULO JACAREPIA",
-        "SAQUAREMA MAIS SEGURA III",
         "MÓDULO TREVO VILATUR",
+        "SAQUAREMA MAIS SEGURA III",
+        "VTR DE APOIO AO MODULO JACAREPIA",
     ],
     "MUNICIPIO DE ARRAIAL DO CABO": [
         "Selecione uma vaga",
@@ -367,6 +402,7 @@ OPTIONS_VAGASXLOCAIS_CPA = {
     ],
     "MUNICÍPIO DE ARARUAMA": [
         "Selecione uma vaga",
+        "PATRULHAMENTO ARARUAMA MAIS SEGURA",
     ],
     "PREFEITURA DE CABO FRIO": [
         "Selecione uma vaga",
@@ -380,9 +416,25 @@ OPTIONS_VAGASXLOCAIS_CPA = {
 
 OPTIONS_HORAMARCACAO = ["Selecione o horário", "06:00:00", "06:30:00", "07:00:00"]
 
-OPTIONS_TURNOSERVICO = ["Selecione o turno de serviço", "6 h", "8 h", "12 h", "24 h"]
+OPTIONS_TURNOSERVICO = ["Selecione o turno de serviço", "8 h", "12 h", "24 h"]
 
 OPTIONS_HORARIO = [
+    "Selecione o horário de serviço",
+    "06:00:00",
+    "07:00:00",
+    "08:00:00",
+    "09:00:00",
+    "10:00:00",
+    "14:00:00",
+    "16:00:00",
+    "16:30:00",
+    "18:00:00",
+    "18:01:00",
+    "19:00:00",
+    "20:00:00",
+    "21:30:00",
+]
+""" OPTIONS_HORARIO = [
     "Selecione o horário de serviço",
     "01:00:00",
     "01:30:00",
@@ -419,6 +471,7 @@ OPTIONS_HORARIO = [
     "17:00:00",
     "17:30:00",
     "18:00:00",
+    "18:01:00",
     "18:30:00",
     "19:00:00",
     "19:30:00",
@@ -432,3 +485,4 @@ OPTIONS_HORARIO = [
     "23:30:00",
     "00:00:00",
 ]
+ """

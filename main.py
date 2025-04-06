@@ -22,9 +22,9 @@ import tkinter as tk
 from tkinter import messagebox
 from tkinter import font as tkfont
 import pandas as pd
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import time as t
-from dateutil.relativedelta import relativedelta, SU
+from dateutil.relativedelta import relativedelta, SU, MO
 import pytesseract
 import cv2
 import numpy as np
@@ -50,7 +50,7 @@ janela = None
 usuario = None
 senha = None
 tipo_login = None
-hora_limite = None
+""" hora_limite = None """
 text_area = None
 
 # Carrega as variáveis do arquivo .env
@@ -59,7 +59,8 @@ load_dotenv()
 
 def acessar_site():
     # # Configuração do Chrome em modo headless
-    # chrome_options = Options()
+    chrome_options = Options()
+    chrome_options.add_argument("--incognito")  # Abre o navegador em modo anônimo
     # chrome_options.add_argument('--headless')  # Executar em modo headless
     #
     # # Configuração do WebDriver
@@ -69,7 +70,9 @@ def acessar_site():
         .install()
         .replace("THIRD_PARTY_NOTICES.chromedriver", "chromedriver.exe")
     )
-    navegador = webdriver.Chrome(service=Service(chrome_driver_path))
+    navegador = webdriver.Chrome(
+        service=Service(chrome_driver_path), options=chrome_options
+    )
     navegador.maximize_window()
 
     # Conectar ao DevTools e simular a rede 3G
@@ -215,7 +218,7 @@ def processar_informacoes(navegador_param):
 
 def pesquisar_vaga(navegador_param):
     is_mensagem = False
-    current_time = datetime.now().time()
+    """ current_time = datetime.now().time()
     if current_time < datetime.strptime("06:00:00", "%H:%M:%S").time():
         adicionar_mensagem(f"Aguardando o horário para iniciar a marcação do RAS...")
         janela.update()  # Atualiza a janela para exibir a mensagem
@@ -230,10 +233,48 @@ def pesquisar_vaga(navegador_param):
         WebDriverWait(navegador_param, timeout).until(
             ec.element_to_be_clickable((By.ID, "btnNovaInscricao"))
         ).click()
-    tentativa = 0
+    tentativa = 0 """
 
     iterator = iter(informacoes_array)
-    for informacao in informacoes_array:
+    # for informacao in informacoes_array:
+    for index, informacao in enumerate(informacoes_array):
+        if index == 0:
+            current_time = datetime.now().time()
+            if (
+                current_time < datetime.strptime("06:00:00", "%H:%M:%S").time()
+                and informacao["tipo_filtro"] == 1
+            ):
+                adicionar_mensagem(
+                    f"Aguardando o horário para iniciar a marcação do RAS..."
+                )
+                janela.update()  # Atualiza a janela para exibir a mensagem
+                while True:
+                    current_time = datetime.now().time()
+                    if current_time >= datetime.strptime("06:00:00", "%H:%M:%S").time():
+                        WebDriverWait(navegador_param, timeout).until(
+                            ec.element_to_be_clickable((By.ID, "btnNovaInscricao"))
+                        ).click()
+                        break
+            elif (
+                current_time < datetime.strptime("07:00:00", "%H:%M:%S").time()
+                and informacao["tipo_filtro"] == 1
+            ):
+                adicionar_mensagem(
+                    f"Aguardando o horário para iniciar a marcação do PROEIS..."
+                )
+                janela.update()  # Atualiza a janela para exibir a mensagem
+                while True:
+                    current_time = datetime.now().time()
+                    if current_time >= datetime.strptime("07:00:00", "%H:%M:%S").time():
+                        WebDriverWait(navegador_param, timeout).until(
+                            ec.element_to_be_clickable((By.ID, "btnNovaInscricao"))
+                        ).click()
+                        break
+            else:
+                WebDriverWait(navegador_param, timeout).until(
+                    ec.element_to_be_clickable((By.ID, "btnNovaInscricao"))
+                ).click()
+            tentativa = 0
         next_item = next(iterator, None)
         if tentativa > 0:
             is_alert(navegador_param)
@@ -366,7 +407,7 @@ def pesquisar_vaga(navegador_param):
                             )
                         )
 
-                        current_time = datetime.now().time()
+                        """ current_time = datetime.now().time()
                         if (
                             current_time
                             < datetime.strptime("07:00:00", "%H:%M:%S").time()
@@ -376,14 +417,12 @@ def pesquisar_vaga(navegador_param):
                                 adicionar_mensagem(
                                     f"Aguardando o horário para iniciar a marcação do Proeis..."
                                 )
-                                janela.update()  # Atualiza a janela para exibir a mensagem
+                                janela.update()   """
+
+                        # Atualiza a janela para exibir a mensagem
                         # if check_input_and_time(input_field, hora_limite):
-                        if (
-                            hora_limite
-                            and check_input_and_time(input_field, hora_limite)
-                        ) or (
-                            not hora_limite and check_input_and_time(input_field, None)
-                        ):
+                        if check_input_and_time(input_field, hora_limite):
+
                             # Encontrar e clicar no botão de login
                             WebDriverWait(navegador_param, timeout).until(
                                 ec.element_to_be_clickable((By.ID, "btnConsultar"))
@@ -460,8 +499,8 @@ def pesquisar_vaga(navegador_param):
                     )
                     janela.update()  # Atualiza a janela para exibir a mensagem
                     break
-            except TimeoutException:                
-                if (tentativa < 2):
+            except TimeoutException:
+                if tentativa < 2:
                     tentativa += 1
                     adicionar_mensagem(
                         f"Setor {informacao['setor_servico']} no dia {informacao['data_servico'][8:10]}/{informacao['data_servico'][5:7]}/{informacao['data_servico'][0:4]} às {informacao['hora_servico']} NÃO ENCONTRADO! Buscando próxima vaga em 5 segundos..."
@@ -645,10 +684,7 @@ def selecionar_vaga(navegador_param, informacao, next_item):
 def check_input_and_time(input_field, hora_limite_param):
     current_time = datetime.now().time()
     input_value = input_field.get_attribute("value")
-    """ return (
-        len(input_value) >= 6
-        and current_time >= datetime.strptime(hora_limite_param, "%H:%M:%S").time()
-    ) """
+
     if len(input_value) < 6:
         return False
 
@@ -657,7 +693,9 @@ def check_input_and_time(input_field, hora_limite_param):
         return True
 
     # Verifica se a hora atual é maior ou igual a hora_limite_param
-    return current_time >= datetime.strptime(hora_limite_param, "%H:%M:%S").time()
+    return (
+        current_time >= datetime.strptime(hora_limite_param.strip(), "%H:%M:%S").time()
+    )
 
 
 def check_input(input_field):
@@ -859,12 +897,23 @@ def abrir_janela():
 
     # Verificar se hoje é quinta-feira
     today = date.today()
-    if today.weekday() == 3:  # 3 representa quinta-feira
+    """ if today.weekday() == 3:  # 3 representa quinta-feira
         second_sunday = today + relativedelta(weekday=SU(1)) + relativedelta(weeks=1)
         periods = (second_sunday - today).days + 1
     else:  # Se hoje for antes de quinta-feira (segunda a quarta)
         next_sunday = today + relativedelta(weekday=SU(1))
-        periods = (next_sunday - today).days + 1
+        periods = (next_sunday - today).days + 1 """
+    if today.weekday() >= 3:  # Quinta (3), sexta (4), sábado (5) ou domingo (6)
+        # Pega a próxima segunda-feira
+        next_monday = today + relativedelta(weekday=MO(+1))
+        # Pega o domingo da próxima semana
+        target_sunday = next_monday + relativedelta(weekday=SU(+1))
+    else:  # Segunda (0), terça (1), quarta (2)
+        # Pega o domingo desta semana
+        target_sunday = today + relativedelta(weekday=SU(0))
+
+    # Calcula o número de dias a partir de hoje até o domingo alvo
+    periods = (target_sunday - today).days + 1
 
     # Gerar a lista de datas
     list_of_date = pd.date_range(today, periods=periods)
@@ -893,6 +942,8 @@ def abrir_janela():
     variable_vaga_servico = []
     variable_horario_servico = []
     variable_turno_servico = []
+
+    option_menus_horario = []
 
     # Função para adicionar mensagem ao Text
     def adicionar_mensagem(mensagem):
@@ -936,14 +987,16 @@ def abrir_janela():
             )
             return False
 
-        """ horario_maracacao = OPTIONS_HORAMARCACAO.index(variable_horariomarcacao.get())
+        horario_maracacao = OPTIONS_HORAMARCACAO.index(variable_horariomarcacao.get())
         if horario_maracacao == 0:
-            show_alert("Erro", "Informe o horário da marcação")
+            global hora_limite
+            hora_limite = None
+            """ show_alert("Erro", "Informe o horário da marcação")
             return False """
         is_servico_selecionado = False
         for i in range(7):
             data_servico = data.index(variable_data_servico[i].get())
-            horario_servico = OPTIONS_HORARIO.index(variable_horario_servico[i].get())
+            horario_servico = OPTIONS_HORARIO.index(variable_horario_servico[i].get())            
             turno_servico = OPTIONS_TURNOSERVICO.index(variable_turno_servico[i].get())
             if convenio_vars[i].get():
                 indice_convenio = OPTIONS_CONVENIO.index(variable_convenio[i].get())
@@ -1015,6 +1068,37 @@ def abrir_janela():
             return False
 
         return True
+    
+    def get_horarios_disponiveis(data_servico_str):
+        hoje = datetime.today().date()
+        data_servico = datetime.strptime(data_servico_str, "%Y-%m-%d").date()
+        agora = datetime.now()
+        horarios_validos = []
+
+        if data_servico == hoje:
+            limite = agora + timedelta(hours=4)
+            for horario_str in OPTIONS_HORARIO[1:]:
+                horario_time = datetime.strptime(horario_str, "%H:%M:%S").time()
+                horario_datetime = datetime.combine(hoje, horario_time)
+                if horario_datetime >= limite:
+                    horarios_validos.append(horario_str)
+        else:
+            horarios_validos = OPTIONS_HORARIO[1:]
+
+        return horarios_validos
+
+    def atualizar_horarios(index):
+        data_selecionada = variable_data_servico[index].get()
+        horarios = ["Selecione o horário de serviço"] + get_horarios_disponiveis(data_selecionada)
+
+        menu = option_menus_horario[index]["menu"]
+        menu.delete(0, "end")
+
+        for horario in horarios:
+            menu.add_command(label=horario, command=lambda h=horario: variable_horario_servico[index].set(h))
+
+        # Define como "Selecione" ao atualizar
+        variable_horario_servico[index].set(horarios[0])
 
     def show_alert(title, message):
         alert_window = tk.Toplevel(janela)
@@ -1260,7 +1344,7 @@ def abrir_janela():
     # Cria um frame com efeito de alto relevo
     # embossed_frame_convenio = create_embossed_frame(janela, row, 0, padx=10, pady=10)
     # embossed_frame_cpa = create_embossed_frame(janela, row, 1, padx=10, pady=10)
-    for i in range(7):
+    for i in range(7):        
         convenio_vars.append(IntVar())
         convenio_check = Checkbutton(
             janela, text="Convênio:", onvalue=1, offvalue=0, variable=convenio_vars[i]
@@ -1332,7 +1416,7 @@ def abrir_janela():
 
         variable_data_servico.append(StringVar(janela))
         variable_data_servico[i].set(data[0])
-        w_data = OptionMenu(janela, variable_data_servico[i], *data)
+        w_data = OptionMenu(janela, variable_data_servico[i], *data, command=lambda value, idx=i: atualizar_horarios(idx))
         w_data.grid(column=column, row=row, padx=5, pady=5)
         column += 1
 
@@ -1340,6 +1424,7 @@ def abrir_janela():
         variable_horario_servico[i].set(OPTIONS_HORARIO[0])
         w_horario = OptionMenu(janela, variable_horario_servico[i], *OPTIONS_HORARIO)
         w_horario.grid(column=column, row=row, padx=5, pady=5)
+        option_menus_horario.append(w_horario)
         column += 1
 
         variable_turno_servico.append(StringVar(janela))
